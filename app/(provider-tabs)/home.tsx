@@ -1,9 +1,11 @@
 import { useReligion } from "@/contexts/ReligionContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
+  Dimensions,
+  Image,
   Modal,
   ScrollView,
   StatusBar,
@@ -12,1246 +14,830 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Calendar } from "react-native-calendars";
+import { useTheme } from "../../theme/ThemeProvider";
 
-export default function HomeScreen() {
+const { width } = Dimensions.get("window");
+
+const getMockData = (religion: string) => {
+  const services = {
+    islam: [
+      "Quran Recitation",
+      "Nikah Ceremony",
+      "Islamic Lecture",
+      "Dua Request",
+    ],
+    hindu: ["Puja Ceremony", "Hawan", "Vedic Path", "Griha Pravesh"],
+    christianity: [
+      "Prayer Service",
+      "Bible Study",
+      "Wedding Ceremony",
+      "Baptism",
+    ],
+  };
+
+  const selectedServices =
+    services[religion as keyof typeof services] || services.islam;
+
+  return {
+    newRequests: [
+      {
+        id: "BK101",
+        clientName:
+          religion === "hindu"
+            ? "Rajesh Kumar"
+            : religion === "christianity"
+              ? "John Doe"
+              : "Fatima Hassan",
+        clientImage: "https://i.pravatar.cc/150?u=2",
+        serviceType: selectedServices[0],
+        serviceLocation: "Home Service",
+        time: "05:30 PM",
+        location: "Sector 45, Gurgaon",
+        distance: "2.4 km",
+        rating: 4.8,
+      },
+      {
+        id: "BK102",
+        clientName:
+          religion === "hindu"
+            ? "Priya Sharma"
+            : religion === "christianity"
+              ? "Mary Smith"
+              : "Mohammed Ali",
+        clientImage: "https://i.pravatar.cc/150?u=3",
+        serviceType: selectedServices[1],
+        serviceLocation: "Venue Service",
+        time: "07:00 PM",
+        location: "Community Hall, Block C",
+        distance: "3.1 km",
+        rating: 4.9,
+      },
+    ],
+    upcomingEvents: [
+      {
+        id: "EV101",
+        title: selectedServices[1],
+        date: "2026-02-24",
+        day: "24",
+        month: "FEB",
+        time: "10:00 AM - 12:00 PM",
+        clientName:
+          religion === "hindu"
+            ? "Amit Patel"
+            : religion === "christianity"
+              ? "David Williams"
+              : "Ahmed Khan",
+      },
+      {
+        id: "EV102",
+        title: selectedServices[2],
+        date: "2026-02-25",
+        day: "25",
+        month: "FEB",
+        time: "02:00 PM - 04:00 PM",
+        clientName:
+          religion === "hindu"
+            ? "Neha Gupta"
+            : religion === "christianity"
+              ? "Sarah Johnson"
+              : "Aisha Begum",
+      },
+    ],
+  };
+};
+
+export default function ScholarHomeScreen() {
   const router = useRouter();
   const { religion } = useReligion();
+  const theme = useTheme();
+
+  const [scholarName, setScholarName] = useState("");
   const [isOnline, setIsOnline] = useState(true);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-
-  // Calendar states
+  const [showMenu, setShowMenu] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState("");
 
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  const todayEarnings = 1250;
+  const completedCount = 12;
+  const rating = 4.9;
 
-  const years = [2024, 2025, 2026, 2027, 2028];
+  useEffect(() => {
+    // Mock scholar name - replace with real storage/context later
+    if (religion === "hindu") setScholarName("Moodi");
+    else if (religion === "christianity") setScholarName("John Peter");
+    else setScholarName("Ahmed Khan");
+  }, [religion]);
 
-  const getTheme = () => {
-    const selected = religion?.toLowerCase().trim();
-    if (selected === "islam" || selected === "muslim") {
-      return { primary: "#0E9F6E", secondary: "#E8F5E9", label: "Islam" };
-    }
-    if (selected === "hindu" || selected === "hinduism") {
-      return { primary: "#F59E0B", secondary: "#FFF3E0", label: "Hinduism" };
-    }
-    if (selected === "christianity" || selected === "christian") {
-      return {
-        primary: "#3B82F6",
-        secondary: "#E3F2FD",
-        label: "Christianity",
-      };
-    }
-    return { primary: "#6200EE", secondary: "#F3E5F5", label: "Default" };
+  const mockData = getMockData(religion || "islam");
+  const [newRequests, setNewRequests] = useState(mockData.newRequests);
+  const upcomingEvents = mockData.upcomingEvents;
+
+  const handleAcceptBooking = (booking: any) => {
+    router.push({
+      pathname: "/booking/Bookingdetails",
+      params: { ...booking, status: "pending" },
+    });
   };
 
-  const theme = getTheme();
-
-  // Sample data
-  const scholarInfo = {
-    name: "Sheikh Ahmed",
-    title: "Islamic Scholar",
-    rating: 4.9,
-    completedBookings: 127,
-    totalClients: 89,
-    todayEarnings: 550,
-    earningsIncrease: 18,
-    servicesOffered: 2,
+  const handleDeclineBooking = (bookingId: string) => {
+    Alert.alert("Decline Request", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Decline",
+        onPress: () => {
+          setNewRequests((prev) => prev.filter((req) => req.id !== bookingId));
+          Alert.alert("Declined", "Booking request declined");
+        },
+      },
+    ]);
   };
 
-  const todayBookings = [
-    {
-      id: 1,
-      clientName: "Muhammad Ali",
-      service: "Jummah Prayer Service",
-      status: "confirmed",
-      time: "2:00 PM - 3:30 PM",
-      distance: "2.5 km",
-      clientImage: null,
-    },
-    {
-      id: 2,
-      clientName: "Fatima Hassan",
-      service: "Quran Recitation",
-      status: "pending",
-      time: "5:30 PM - 6:30 PM",
-      distance: "1.2 km",
-      clientImage: null,
-    },
-  ];
+  const handleLogout = () => {
+    Alert.alert("Logout", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Logout", onPress: () => router.replace("/login") },
+    ]);
+  };
 
-  const upcomingBookings = [
-    {
-      id: 1,
-      title: "Nikhah Ceremony",
-      date: "Tomorrow, Dec 20",
-      time: "10:00 AM",
-      description: "Ahmad & Sarah",
-    },
-    {
-      id: 2,
-      title: "Jummah Prayer",
-      date: "Dec 22, Friday",
-      time: "1:00 PM",
-      description: "Community Service",
-    },
-    {
-      id: 3,
-      title: "Quran Teaching",
-      date: "Dec 24, Sunday",
-      time: "4:00 PM",
-      description: "Private Session",
-    },
-  ];
-
-  const handleBookingAction = (bookingId: number, action: string) => {
-    if (action === "accept") {
-      Alert.alert("Success", "Booking accepted successfully");
-    } else if (action === "decline") {
-      Alert.alert("Booking Declined", "You have declined this booking");
+  const handleDateSelect = (date: any) => {
+    setSelectedDate(date.dateString);
+    const dayEvents = upcomingEvents.filter((e) => e.date === date.dateString);
+    if (dayEvents.length > 0) {
+      Alert.alert(
+        "Scheduled Events",
+        dayEvents
+          .map((e) => `${e.title}\n${e.time}\nClient: ${e.clientName}`)
+          .join("\n\n"),
+      );
+    } else {
+      Alert.alert("No Events", "No services scheduled for this date");
     }
   };
 
-  const CalendarModal = () => (
-    <Modal
-      visible={showCalendar}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setShowCalendar(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.calendarModalContent}>
-          <Text style={styles.calendarModalTitle}>Select Date</Text>
-
-          {/* Year Selection */}
-          <Text style={styles.pickerLabel}>Year</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.yearScroll}
-          >
-            {years.map((year) => (
-              <TouchableOpacity
-                key={year}
-                style={[
-                  styles.yearButton,
-                  selectedYear === year && styles.selectedYearButton,
-                ]}
-                onPress={() => setSelectedYear(year)}
-              >
-                <Text
-                  style={[
-                    styles.yearButtonText,
-                    selectedYear === year && styles.selectedYearText,
-                  ]}
-                >
-                  {year}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {/* Month Selection */}
-          <Text style={styles.pickerLabel}>Month</Text>
-          <View style={styles.monthGrid}>
-            {monthNames.map((month, index) => (
-              <TouchableOpacity
-                key={month}
-                style={[
-                  styles.monthButton,
-                  selectedMonth === index && styles.selectedMonthButton,
-                ]}
-                onPress={() => setSelectedMonth(index)}
-              >
-                <Text
-                  style={[
-                    styles.monthButtonText,
-                    selectedMonth === index && styles.selectedMonthText,
-                  ]}
-                >
-                  {month.substring(0, 3)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Date Selection */}
-          <Text style={styles.pickerLabel}>Date</Text>
-          <View style={styles.dateGrid}>
-            {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => (
-              <TouchableOpacity
-                key={date}
-                style={[
-                  styles.dateButton,
-                  selectedDate.getDate() === date &&
-                    selectedDate.getMonth() === selectedMonth &&
-                    selectedDate.getFullYear() === selectedYear &&
-                    styles.selectedDateButton,
-                ]}
-                onPress={() => {
-                  setSelectedDate(new Date(selectedYear, selectedMonth, date));
-                  setShowCalendar(false);
-                  router.push(
-                    `/(provider-tabs)/schedule?date=${selectedYear}-${selectedMonth + 1}-${date}`,
-                  );
-                }}
-              >
-                <Text
-                  style={[
-                    styles.dateButtonText,
-                    selectedDate.getDate() === date &&
-                      selectedDate.getMonth() === selectedMonth &&
-                      selectedDate.getFullYear() === selectedYear &&
-                      styles.selectedDateText,
-                  ]}
-                >
-                  {date}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.modalActions}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setShowCalendar(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.confirmButton, { backgroundColor: theme.primary }]}
-              onPress={() => {
-                setShowCalendar(false);
-                router.push(
-                  `/(provider-tabs)/schedule?date=${selectedYear}-${selectedMonth + 1}-${selectedDate.getDate()}`,
-                );
-              }}
-            >
-              <Text style={styles.confirmButtonText}>Confirm</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-
-  const ProfileMenu = () => (
-    <Modal
-      visible={showProfileMenu}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setShowProfileMenu(false)}
-    >
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={() => setShowProfileMenu(false)}
-      >
-        <ScrollView>
-          <View
-            style={[styles.profileMenu, { backgroundColor: theme.primary }]}
-          >
-            <View style={styles.profileMenuHeader}>
-              <View style={styles.profileImageLarge}>
-                <Text style={styles.profileImageText}>SA</Text>
-              </View>
-              <Text style={styles.profileName}>Sheikh Ahmed</Text>
-              <Text style={styles.profileTitle}>Islamic Scholar</Text>
-            </View>
-
-            <View style={styles.profileMenuItems}>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowProfileMenu(false);
-                  router.push("/(provider-tabs)/profile");
-                }}
-              >
-                <Ionicons name="person-outline" size={22} color="#FFFFFF" />
-                <Text style={styles.menuItemText}>My Profile</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowProfileMenu(false);
-                  router.push("/booking/earnings");
-                }}
-              >
-                <Ionicons name="wallet-outline" size={22} color="#FFFFFF" />
-                <Text style={styles.menuItemText}>Earnings</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowProfileMenu(false);
-                  router.push("/booking/schedule");
-                }}
-              >
-                <Ionicons name="calendar-outline" size={22} color="#FFFFFF" />
-                <Text style={styles.menuItemText}>My Schedule</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowProfileMenu(false);
-                  router.push("/booking/services");
-                }}
-              >
-                <Ionicons name="apps-outline" size={22} color="#FFFFFF" />
-                <Text style={styles.menuItemText}>Services</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowProfileMenu(false);
-                  router.push("/booking/settings");
-                }}
-              >
-                <Ionicons name="settings-outline" size={22} color="#FFFFFF" />
-                <Text style={styles.menuItemText}>Settings</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowProfileMenu(false);
-                  router.push("/booking/help");
-                }}
-              >
-                <Ionicons
-                  name="help-circle-outline"
-                  size={22}
-                  color="#FFFFFF"
-                />
-                <Text style={styles.menuItemText}>Help & Support</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.menuItem, styles.logoutItem]}
-                onPress={() => {
-                  setShowProfileMenu(false);
-                  Alert.alert("Logout", "Are you sure you want to logout?", [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                      text: "Logout",
-                      onPress: () => router.replace("/(auth)/login"),
-                    },
-                  ]);
-                }}
-              >
-                <Ionicons name="log-out-outline" size={22} color="#FFB4B4" />
-                <Text style={[styles.menuItemText, styles.logoutText]}>
-                  Logout
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={styles.closeMenuButton}
-              onPress={() => setShowProfileMenu(false)}
-            >
-              <Ionicons name="close" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </TouchableOpacity>
-    </Modal>
-  );
-
+  const getReligiousGreeting = () => {
+    if (religion === "islam") return "Assalamu Alaikum";
+    if (religion === "hindu") return "Namaste";
+    if (religion === "christianity") return "Peace be with you";
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.primary }]}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={styles.profileToggle}
-            onPress={() => setShowProfileMenu(true)}
-          >
-            <View style={styles.profileImageSmall}>
-              <Text style={styles.profileImageSmallText}>SA</Text>
-            </View>
-            <View>
-              <Text style={styles.scholarName}>{scholarInfo.name}</Text>
-              <Text style={styles.scholarTitle}>{scholarInfo.title}</Text>
-            </View>
-          </TouchableOpacity>
-
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.notificationIcon}>
-              <Ionicons
-                name="notifications-outline"
-                size={24}
-                color="#FFFFFF"
+    <ScrollView>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <StatusBar barStyle="light-content" />
+        <View style={{ flex: 1, paddingBottom: 0.1 }}></View>
+        {/* Header with Theme Color */}
+        <View style={[styles.header, { backgroundColor: theme.primary }]}>
+          <View style={styles.headerRow}>
+            <TouchableOpacity onPress={() => router.push("/profile")}>
+              <Image
+                source={{
+                  uri: "https://www.pmindia.gov.in/wp-content/uploads/2025/12/01.jpg",
+                }}
+                style={styles.avatar}
               />
-              <View style={styles.notificationBadge}>
-                <Text style={styles.badgeText}>3</Text>
+            </TouchableOpacity>
+
+            <View style={styles.headerText}>
+              <Text style={styles.greeting}>
+                {getReligiousGreeting()}, {scholarName}
+              </Text>
+              <View
+                style={[
+                  styles.badge,
+                  { backgroundColor: theme.primary + "40" },
+                ]}
+              >
+                <Text style={styles.badgeText}>{theme.label}</Text>
               </View>
+            </View>
+
+            {/* Three Lines Menu Button */}
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={() => setShowMenu(true)}
+            >
+              <Ionicons name="menu" size={28} color="#FFF" />
             </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Online Status Toggle */}
-        <View style={styles.statusContainer}>
-          <View style={styles.statusLeft}>
-            <View
+          {/* Online/Offline Toggle */}
+          <View style={styles.statusBanner}>
+            <View>
+              <Text style={styles.statusTitle}>
+                {isOnline ? "🟢 You are Online" : "⚫ Currently Offline"}
+              </Text>
+              <Text style={styles.statusSub}>
+                {isOnline
+                  ? "Accepting new service requests"
+                  : "No new requests will be shown"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => setIsOnline(!isOnline)}
               style={[
-                styles.statusDot,
-                isOnline ? styles.onlineDot : styles.offlineDot,
+                styles.toggleTrack,
+                {
+                  backgroundColor: isOnline
+                    ? "#090909"
+                    : "rgba(255,255,255,0.3)",
+                },
               ]}
-            />
-            <Text style={styles.statusText}>
-              You are {isOnline ? "Online" : "Offline"}
-            </Text>
-          </View>
-          <Text style={styles.statusSubtext}>
-            {isOnline ? "Available for bookings" : "Not accepting bookings"}
-          </Text>
-          <TouchableOpacity
-            style={[
-              styles.statusToggle,
-              isOnline ? styles.onlineToggle : styles.offlineToggle,
-            ]}
-            onPress={() => setIsOnline(!isOnline)}
-          >
-            <Text style={styles.toggleText}>
-              {isOnline ? "Go Offline" : "Go Online"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Earnings Card */}
-        <View style={styles.earningsCard}>
-          <View style={styles.earningsHeader}>
-            <Text style={styles.earningsTitle}>Todays Earnings</Text>
-            <TouchableOpacity onPress={() => router.push("/booking/earnings")}>
-              <Text style={[styles.viewAllText, { color: theme.primary }]}>
-                View All →
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.earningsContent}>
-            <View>
-              <Text style={styles.earningsAmount}>
-                ₦{scholarInfo.todayEarnings}
-              </Text>
-              <View style={styles.earningsIncrease}>
-                <Ionicons name="arrow-up" size={16} color="#10B981" />
-                <Text style={styles.increaseText}>
-                  +{scholarInfo.earningsIncrease}% from yesterday
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.servicesBadge}>
-              <Text style={styles.servicesCount}>
-                {scholarInfo.servicesOffered}
-              </Text>
-              <Text style={styles.servicesLabel}>Services</Text>
-              <Text style={styles.completedText}>Completed</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Today's Bookings Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Today s Bookings</Text>
-            <TouchableOpacity
-              onPress={() => router.push("/(provider-tabs)/bookings")}
             >
-              <Text style={[styles.seeAllText, { color: theme.primary }]}>
-                See All
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {todayBookings.map((booking) => (
-            <TouchableOpacity
-              key={booking.id}
-              style={styles.bookingCard}
-              onPress={() => router.push("/(provider-tabs)/bookings")}
-            >
-              <View style={styles.bookingHeader}>
-                <View style={styles.clientInfo}>
-                  <View style={styles.clientImagePlaceholder}>
-                    <Text style={styles.clientInitials}>
-                      {booking.clientName
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </Text>
-                  </View>
-                  <View>
-                    <Text style={styles.clientName}>{booking.clientName}</Text>
-                    <Text style={styles.serviceName}>{booking.service}</Text>
-                  </View>
-                </View>
-                <View
-                  style={[
-                    styles.bookingStatus,
-                    {
-                      backgroundColor:
-                        booking.status === "confirmed" ? "#DCFCE7" : "#FEF3C7",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusText,
-                      {
-                        color:
-                          booking.status === "confirmed"
-                            ? "#166534"
-                            : "#92400E",
-                      },
-                    ]}
-                  >
-                    {booking.status === "confirmed" ? "Confirmed" : "Pending"}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.bookingDetails}>
-                <View style={styles.detailItem}>
-                  <Ionicons name="time-outline" size={16} color="#6B7280" />
-                  <Text style={styles.detailText}>{booking.time}</Text>
-                </View>
-                <View style={styles.detailItem}>
-                  <Ionicons name="location-outline" size={16} color="#6B7280" />
-                  <Text style={styles.detailText}>{booking.distance} away</Text>
-                </View>
-              </View>
-
-              {booking.status === "confirmed" ? (
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.callButton]}
-                    onPress={() => router.push("/(provider-tabs)/messages")}
-                  >
-                    <Ionicons name="call-outline" size={18} color="#3B82F6" />
-                    <Text style={styles.callButtonText}>Call</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.messageButton]}
-                    onPress={() => router.push("/(provider-tabs)/messages")}
-                  >
-                    <Ionicons
-                      name="chatbubble-outline"
-                      size={18}
-                      color="#FFFFFF"
-                    />
-                    <Text style={styles.messageButtonText}>Message</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.acceptButton]}
-                    onPress={() => handleBookingAction(booking.id, "accept")}
-                  >
-                    <Text style={styles.acceptButtonText}>Accept</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.declineButton]}
-                    onPress={() => handleBookingAction(booking.id, "decline")}
-                  >
-                    <Text style={styles.declineButtonText}>Decline</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Upcoming This Week Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.upcomingHeaderLeft}>
-              <Ionicons name="calendar" size={20} color={theme.primary} />
-              <Text style={styles.sectionTitle}>Upcoming This Week</Text>
-            </View>
-            <TouchableOpacity onPress={() => setShowCalendar(true)}>
-              <Ionicons
-                name="calendar-outline"
-                size={24}
-                color={theme.primary}
+              <View
+                style={[
+                  styles.toggleCircle,
+                  isOnline
+                    ? { alignSelf: "flex-end" }
+                    : { alignSelf: "flex-start" },
+                ]}
               />
             </TouchableOpacity>
           </View>
-
-          {upcomingBookings.map((booking) => (
-            <View key={booking.id} style={styles.upcomingCard}>
-              <View style={styles.upcomingDateBox}>
-                <Text style={styles.upcomingDate}>
-                  {booking.date.split(",")[0]}
-                </Text>
-                <Text style={styles.upcomingDay}>
-                  {booking.date.split(",")[1]}
-                </Text>
-              </View>
-              <View style={styles.upcomingInfo}>
-                <Text style={styles.upcomingTitle}>{booking.title}</Text>
-                <Text style={styles.upcomingTime}>{booking.time}</Text>
-                <Text style={styles.upcomingDesc}>{booking.description}</Text>
-              </View>
-            </View>
-          ))}
         </View>
 
-        {/* Rating and Stats Section */}
-        <View style={styles.statsSection}>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{scholarInfo.rating}</Text>
-            <View style={styles.statStars}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Ionicons
-                  key={star}
-                  name="star"
-                  size={14}
-                  color={
-                    star <= Math.floor(scholarInfo.rating)
-                      ? "#F59E0B"
-                      : "#D1D5DB"
-                  }
-                />
-              ))}
-            </View>
-            <Text style={styles.statLabel}>Rating</Text>
+        {/* Stats Cards */}
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { borderLeftColor: theme.primary }]}>
+            <Text style={styles.statValue}>₹{todayEarnings}</Text>
+            <Text style={styles.statLabel}>Todays Pay</Text>
           </View>
-
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>
-              {scholarInfo.completedBookings}
-            </Text>
+          <View style={[styles.statCard, { borderLeftColor: theme.primary }]}>
+            <Text style={styles.statValue}>{completedCount}</Text>
             <Text style={styles.statLabel}>Completed</Text>
           </View>
-
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{scholarInfo.totalClients}</Text>
-            <Text style={styles.statLabel}>Clients</Text>
+          <View style={[styles.statCard, { borderLeftColor: theme.primary }]}>
+            <Text style={styles.statValue}>{rating}</Text>
+            <Text style={styles.statLabel}>Rating</Text>
           </View>
         </View>
 
-        {/* Bottom Padding */}
-        <View style={{ height: 20 }} />
-      </ScrollView>
+        {/* Pending Requests Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: theme.primary }]}>
+            Pending Requests
+          </Text>
+          <TouchableOpacity onPress={() => router.push("/bookings")}>
+            <Text style={{ color: theme.primary }}>View All →</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Profile Menu Modal */}
-      <ProfileMenu />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Pending Requests */}
+          {isOnline ? (
+            newRequests.length > 0 ? (
+              newRequests.map((request) => (
+                <View key={request.id} style={styles.requestCard}>
+                  <View style={styles.cardHeader}>
+                    <Image
+                      source={{ uri: request.clientImage }}
+                      style={styles.clientImage}
+                    />
+                    <View style={styles.clientInfo}>
+                      <Text style={styles.clientName}>
+                        {request.clientName}
+                      </Text>
+                      <Text style={styles.serviceName}>
+                        {request.serviceType} • {request.serviceLocation}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.timeTag,
+                        { backgroundColor: theme.primary + "20" },
+                      ]}
+                    >
+                      <Text style={[styles.timeText, { color: theme.primary }]}>
+                        {request.time}
+                      </Text>
+                    </View>
+                  </View>
 
-      {/* Calendar Modal */}
-      <CalendarModal />
-    </View>
+                  <View style={styles.locationRow}>
+                    <Ionicons
+                      name="location-outline"
+                      size={16}
+                      color="#6B7280"
+                    />
+                    <Text style={styles.locationText}>
+                      {request.location} ({request.distance})
+                    </Text>
+                  </View>
+
+                  <View style={styles.cardActions}>
+                    <TouchableOpacity
+                      style={[styles.btn, styles.declineBtn]}
+                      onPress={() => handleDeclineBooking(request.id)}
+                    >
+                      <Text style={styles.declineText}>Decline</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.btn, { backgroundColor: theme.primary }]}
+                      onPress={() => handleAcceptBooking(request)}
+                    >
+                      <Text style={styles.acceptText}>Accept</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <Ionicons
+                  name="checkmark-done-circle"
+                  size={48}
+                  color="#D1D5DB"
+                />
+                <Text style={styles.emptyText}>No pending requests</Text>
+              </View>
+            )
+          ) : (
+            <View style={styles.offlineState}>
+              <Ionicons name="cloud-offline" size={48} color="#D1D5DB" />
+              <Text style={styles.offlineText}>
+                Go online to see new requests
+              </Text>
+            </View>
+          )}
+
+          {/* Upcoming Events Section with Calendar */}
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: theme.primary }]}>
+              Upcoming Events
+            </Text>
+            <TouchableOpacity onPress={() => setShowCalendar(true)}>
+              <Ionicons name="calendar" size={24} color={theme.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Upcoming Events Cards */}
+          {upcomingEvents.map((event) => (
+            <TouchableOpacity key={event.id} style={styles.scheduleItem}>
+              <View
+                style={[
+                  styles.dateIndicator,
+                  { backgroundColor: theme.primary },
+                ]}
+              >
+                <Text style={styles.dateNum}>{event.day}</Text>
+                <Text style={styles.dateMonth}>{event.month}</Text>
+              </View>
+              <View style={styles.scheduleDetails}>
+                <Text style={styles.scheduleTitle}>{event.title}</Text>
+                <Text style={styles.scheduleClient}>{event.clientName}</Text>
+                <Text style={styles.scheduleTime}>{event.time}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#999" />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Calendar Modal */}
+        <Modal visible={showCalendar} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.calendarContainer}>
+              <View style={styles.calendarHeader}>
+                <Text style={[styles.calendarTitle, { color: theme.primary }]}>
+                  My Schedule
+                </Text>
+                <TouchableOpacity onPress={() => setShowCalendar(false)}>
+                  <Ionicons name="close" size={24} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+
+              <Calendar
+                onDayPress={handleDateSelect}
+                markedDates={{
+                  "2026-02-24": {
+                    selected: true,
+                    selectedColor: theme.primary,
+                    marked: true,
+                  },
+                  "2026-02-25": {
+                    marked: true,
+                    dotColor: theme.primary,
+                  },
+                }}
+                theme={{
+                  selectedDayBackgroundColor: theme.primary,
+                  todayTextColor: theme.primary,
+                  arrowColor: theme.primary,
+                  monthTextColor: theme.primary,
+                  textMonthFontWeight: "bold",
+                }}
+              />
+
+              <View style={styles.legendContainer}>
+                <View style={styles.legendItem}>
+                  <View
+                    style={[
+                      styles.legendDot,
+                      { backgroundColor: theme.primary },
+                    ]}
+                  />
+                  <Text style={styles.legendText}>Scheduled Events</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.closeBtn, { backgroundColor: theme.primary }]}
+                onPress={() => setShowCalendar(false)}
+              >
+                <Text style={styles.closeBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Menu Modal */}
+        <ScrollView>
+          <Modal visible={showMenu} transparent animationType="fade">
+            <TouchableOpacity
+              style={styles.overlay}
+              onPress={() => setShowMenu(false)}
+            >
+              <View style={styles.menuBox}>
+                <View style={styles.menuHeader}>
+                  <Image
+                    source={{ uri: "https://i.pravatar.cc/100" }}
+                    style={styles.menuAvatar}
+                  />
+                  <View>
+                    <Text style={styles.menuName}>{scholarName}</Text>
+                    <Text style={[styles.menuRole, { color: theme.primary }]}>
+                      {theme.label}
+                    </Text>
+                  </View>
+                </View>
+
+                <MenuOption
+                  icon="person-outline"
+                  label="My Profile"
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push("/profile");
+                  }}
+                />
+                <MenuOption
+                  icon="calendar-outline"
+                  label="My Schedule"
+                  onPress={() => {
+                    setShowMenu(false);
+                    setShowCalendar(true);
+                  }}
+                />
+                <MenuOption
+                  icon="book-outline"
+                  label="Notifications"
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push("/booking/Notifications");
+                  }}
+                />
+                <MenuOption
+                  icon="wallet-outline"
+                  label="Earnings"
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push("/booking/earnings");
+                  }}
+                />
+                <MenuOption
+                  icon="wallet-outline"
+                  label="Service"
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push("/booking/services");
+                  }}
+                />
+                <MenuOption
+                  icon="wallet-outline"
+                  label="Service area"
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push("/booking/Servicearea");
+                  }}
+                />
+                <MenuOption
+                  icon="wallet-outline"
+                  label="Availability"
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push("/booking/Availability");
+                  }}
+                />
+                <MenuOption
+                  icon="settings-outline"
+                  label="Settings"
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push("/booking/settings");
+                  }}
+                />
+                <MenuOption
+                  icon="wallet-outline"
+                  label="Reviews"
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push("/booking/ReviewsScreen");
+                  }}
+                />
+                <MenuOption
+                  icon="help-circle-outline"
+                  label="Help & Support"
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push("/booking/help");
+                  }}
+                />
+
+                <TouchableOpacity
+                  style={styles.logoutBtn}
+                  onPress={handleLogout}
+                >
+                  <Ionicons name="log-out-outline" size={22} color="#EF4444" />
+                  <Text style={styles.logoutText}>Logout</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        </ScrollView>
+      </View>
+    </ScrollView>
   );
 }
 
+const MenuOption = ({ icon, label, onPress }: any) => (
+  <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+    <Ionicons name={icon} size={22} color="#374151" />
+    <Text style={styles.menuLabel}>{label}</Text>
+  </TouchableOpacity>
+);
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
+  container: { flex: 1 },
   header: {
-    paddingTop: 50,
-    paddingBottom: 20,
     paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 25,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
   },
-  headerTop: {
+  headerRow: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
   },
-  profileToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  profileImageSmall: {
+  avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#FFF",
   },
-  profileImageSmallText: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#0E9F6E",
+  menuButton: {
+    padding: 5,
+    top: -20,
   },
-  scholarName: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  scholarTitle: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 13,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-  },
-  notificationIcon: {
-    position: "relative",
-  },
-  notificationBadge: {
-    position: "absolute",
-    top: -5,
-    right: -5,
-    backgroundColor: "#EF4444",
-    borderRadius: 10,
-    minWidth: 16,
-    height: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badgeText: {
-    color: "#FFFFFF",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  statusContainer: {
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderRadius: 16,
-    padding: 15,
-  },
-  statusLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 8,
-  },
-  onlineDot: {
-    backgroundColor: "#10B981",
-  },
-  offlineDot: {
-    backgroundColor: "#9CA3AF",
-  },
-  statusText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  statusSubtext: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 13,
-    marginBottom: 10,
-  },
-  statusToggle: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+  headerText: { flex: 1, marginLeft: 15 },
+  greeting: { fontSize: 20, fontWeight: "700", color: "#FFF" },
+  badge: {
     alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginTop: 4,
   },
-  onlineToggle: {
-    backgroundColor: "#EF4444",
-  },
-  offlineToggle: {
-    backgroundColor: "#10B981",
-  },
-  toggleText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  earningsCard: {
-    backgroundColor: "#FFFFFF",
-    marginHorizontal: 20,
-    marginTop: -15,
+  badgeText: { color: "#FFF", fontSize: 10, fontWeight: "600" },
+  statusBanner: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 20,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    padding: 15,
     borderRadius: 20,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+  },
+  statusTitle: { color: "#FFF", fontWeight: "700", fontSize: 16 },
+  statusSub: { color: "rgba(255,255,255,0.8)", fontSize: 12 },
+  toggleTrack: { width: 50, height: 26, borderRadius: 15, padding: 3 },
+  toggleCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#FFF",
+  },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginTop: -15,
+    marginBottom: 20,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: "#FFF",
+    marginHorizontal: 5,
+    padding: 15,
+    borderRadius: 16,
+    borderLeftWidth: 4,
     elevation: 3,
   },
-  earningsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  earningsTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  viewAllText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  earningsContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  earningsAmount: {
-    fontSize: 28,
-    fontWeight: "900",
-    color: "#111827",
-  },
-  earningsIncrease: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 5,
-  },
-  increaseText: {
-    fontSize: 12,
-    color: "#10B981",
-    marginLeft: 4,
-  },
-  servicesBadge: {
-    backgroundColor: "#F3F4F6",
-    padding: 12,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  servicesCount: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  servicesLabel: {
-    fontSize: 11,
-    color: "#6B7280",
-  },
-  completedText: {
-    fontSize: 10,
-    color: "#9CA3AF",
-  },
-  section: {
-    marginTop: 25,
-    paddingHorizontal: 20,
-  },
+  statValue: { fontSize: 20, fontWeight: "800", color: "#1F2937" },
+  statLabel: { fontSize: 11, color: "#6B7280", marginTop: 4 },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: 20,
     marginBottom: 15,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "800",
-    color: "#111827",
+    fontWeight: "700",
   },
-  seeAllText: {
-    fontSize: 14,
-    fontWeight: "600",
+  scrollContent: {
+    padding: 20,
+    paddingTop: 0,
   },
-  upcomingHeaderLeft: {
+  requestCard: {
+    backgroundColor: "#FFF",
+    padding: 15,
+    borderRadius: 20,
+    elevation: 2,
+    marginBottom: 15,
+  },
+  cardHeader: { flexDirection: "row", alignItems: "center" },
+  clientImage: { width: 50, height: 50, borderRadius: 15 },
+  clientInfo: { flex: 1, marginLeft: 12 },
+  clientName: { fontSize: 16, fontWeight: "700" },
+  serviceName: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+  timeTag: { padding: 6, borderRadius: 10 },
+  timeText: { fontSize: 11, fontWeight: "700" },
+  locationRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
   },
-  bookingCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
+  locationText: { marginLeft: 6, color: "#6B7280", fontSize: 13 },
+  cardActions: { flexDirection: "row", gap: 10, marginTop: 15 },
+  btn: { flex: 1, padding: 12, borderRadius: 12, alignItems: "center" },
+  declineBtn: { backgroundColor: "#FEE2E2" },
+  declineText: { color: "#EF4444", fontWeight: "700" },
+  acceptText: { color: "#FFF", fontWeight: "700" },
+  offlineState: {
+    alignItems: "center",
+    padding: 40,
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    marginBottom: 15,
+  },
+  offlineText: { color: "#9CA3AF", marginTop: 10 },
+  emptyState: {
+    alignItems: "center",
+    padding: 40,
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    marginBottom: 15,
+  },
+  emptyText: { color: "#9CA3AF", marginTop: 10 },
+  scheduleItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF",
+    padding: 15,
+    borderRadius: 18,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
     elevation: 2,
   },
-  bookingHeader: {
+  dateIndicator: {
+    width: 50,
+    height: 55,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dateNum: { color: "#FFF", fontWeight: "800", fontSize: 18 },
+  dateMonth: { color: "#FFF", fontSize: 10, fontWeight: "700" },
+  scheduleDetails: { flex: 1, marginLeft: 15 },
+  scheduleTitle: { fontWeight: "700", fontSize: 16 },
+  scheduleClient: { fontSize: 13, color: "#6B7280", marginTop: 2 },
+  scheduleTime: { fontSize: 12, color: "#9CA3AF", marginTop: 2 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  calendarContainer: {
+    backgroundColor: "#FFF",
+    width: width * 0.9,
+    borderRadius: 20,
+    padding: 20,
+  },
+  calendarHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 20,
   },
-  clientInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  clientImagePlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#E5E7EB",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  clientInitials: {
-    fontSize: 14,
+  calendarTitle: {
+    fontSize: 20,
     fontWeight: "700",
-    color: "#4B5563",
   },
-  clientName: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  serviceName: {
-    fontSize: 12,
-    color: "#6B7280",
-  },
-  bookingStatus: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  // statusText: {
-  //   fontSize: 11,
-  //   fontWeight: "700",
-  // },
-  bookingDetails: {
+  legendContainer: {
     flexDirection: "row",
-    gap: 20,
+    marginTop: 20,
     marginBottom: 15,
   },
-  detailItem: {
+  legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    marginRight: 20,
   },
-  detailText: {
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 6,
+  },
+  legendText: {
     fontSize: 12,
     color: "#6B7280",
   },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
+  closeBtn: {
+    padding: 15,
+    borderRadius: 12,
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    borderRadius: 10,
-    gap: 8,
   },
-  callButton: {
-    backgroundColor: "#EFF6FF",
-  },
-  callButtonText: {
-    color: "#3B82F6",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  messageButton: {
-    backgroundColor: "#3B82F6",
-  },
-  messageButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  acceptButton: {
-    backgroundColor: "#10B981",
-  },
-  acceptButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  declineButton: {
-    backgroundColor: "#FEE2E2",
-  },
-  declineButtonText: {
-    color: "#EF4444",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  upcomingCard: {
-    flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  upcomingDateBox: {
-    width: 60,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  upcomingDate: {
+  closeBtnText: {
+    color: "#FFF",
     fontSize: 16,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  upcomingDay: {
-    fontSize: 11,
-    color: "#6B7280",
-  },
-  upcomingInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  upcomingTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  upcomingTime: {
-    fontSize: 12,
-    color: "#6B7280",
-    marginTop: 2,
-  },
-  upcomingDesc: {
-    fontSize: 11,
-    color: "#9CA3AF",
-    marginTop: 2,
-  },
-  statsSection: {
-    flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    marginHorizontal: 20,
-    marginTop: 25,
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  statBox: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: "#111827",
-  },
-  statStars: {
-    flexDirection: "row",
-    marginTop: 4,
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: "#6B7280",
-    marginTop: 2,
-  },
-  // Calendar Modal Styles
-  calendarModalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 20,
-    width: "90%",
-    maxHeight: "80%",
-    alignSelf: "center",
-  },
-  calendarModalTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#111827",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  pickerLabel: {
-    fontSize: 14,
     fontWeight: "600",
-    color: "#6B7280",
-    marginBottom: 10,
-    marginTop: 10,
   },
-  yearScroll: {
-    flexDirection: "row",
-    marginBottom: 10,
-  },
-  yearButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  selectedYearButton: {
-    backgroundColor: "#0E9F6E",
-  },
-  yearButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  selectedYearText: {
-    color: "#FFFFFF",
-  },
-  monthGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 10,
-  },
-  monthButton: {
-    width: "23%",
-    padding: 12,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  selectedMonthButton: {
-    backgroundColor: "#0E9F6E",
-  },
-  monthButtonText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  selectedMonthText: {
-    color: "#FFFFFF",
-  },
-  dateGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 20,
-    maxHeight: 200,
-  },
-  dateButton: {
-    width: "13%",
-    padding: 8,
-    backgroundColor: "#F9FAFB",
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  selectedDateButton: {
-    backgroundColor: "#0E9F6E",
-  },
-  dateButtonText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#111827",
-  },
-  selectedDateText: {
-    color: "#FFFFFF",
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 10,
-  },
-  cancelButton: {
-    flex: 1,
-    padding: 15,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  confirmButton: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  confirmButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  // Profile Menu Styles
-  modalOverlay: {
+  overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
   },
-  profileMenu: {
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+  menuBox: {
+    backgroundColor: "#FFF",
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
     padding: 20,
-    maxHeight: "80%",
   },
-  profileMenuHeader: {
+  menuHeader: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+    marginBottom: 10,
   },
-  profileImageLarge: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
+  menuAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 15,
   },
-  profileImageText: {
-    fontSize: 30,
-    fontWeight: "800",
-    color: "#0E9F6E",
+  menuName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F2937",
   },
-  profileName: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "800",
-  },
-  profileTitle: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 14,
-  },
-  profileMenuItems: {
-    marginBottom: 20,
+  menuRole: {
+    fontSize: 12,
+    marginTop: 2,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.1)",
-    gap: 15,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#F3F4F6",
   },
-  menuItemText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  logoutItem: {
-    borderBottomWidth: 0,
+  menuLabel: { marginLeft: 15, fontSize: 16, color: "#374151" },
+  logoutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
   },
   logoutText: {
-    color: "#FFB4B4",
-  },
-  closeMenuButton: {
-    alignItems: "center",
-    paddingVertical: 15,
+    marginLeft: 10,
+    color: "#EF4444",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

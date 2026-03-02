@@ -1,14 +1,402 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { useReligion } from "@/contexts/ReligionContext";
+import { updateServices } from "@/store/onboardingSlice";
+import { RootState } from "@/store/store";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import React, { useMemo, useRef, useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 
-const services = () => {
+export default function MyServices() {
+  const dispatch = useDispatch();
+  const { religion } = useReligion();
+
+  /**
+   * UPDATED RELIGION THEME LOGIC
+   * Maps religion to a specific primary color
+   */
+  const themeColor = useMemo(() => {
+    const r = religion?.toLowerCase();
+    if (r === "islam") return "#0E9F6E"; // Emerald Green
+    if (r === "Hinduism" || r === "Hindu") return "#F59E0B"; // Orange
+    if (r === "christianity") return "#3B82F6"; // Blue
+    if (r === "sikhism") return "#EAB308"; // Gold/Yellow
+    return "#6366F1"; // Default Indigo fallback
+  }, [religion]);
+
+  const savedServices = useSelector(
+    (state: RootState) => state.onboarding.services.services || [],
+  );
+  const [services, setServices] = useState(savedServices);
+
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const snapPoints = useMemo(() => ["68%"], []);
+
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    duration: "",
+    price: "",
+  });
+
+  const stats = useMemo(() => {
+    const activeServices = services.filter((s) => s.isActive !== false);
+    const totalMinutes = activeServices.reduce((acc, s) => {
+      const val = parseInt(s.duration) || 0;
+      const isHour =
+        s.duration.toLowerCase().includes("hour") ||
+        s.duration.toLowerCase().includes("hr");
+      return acc + (isHour ? val * 60 : val);
+    }, 0);
+
+    return {
+      activeCount: activeServices.length,
+      avgDuration:
+        activeServices.length > 0
+          ? Math.round(totalMinutes / activeServices.length)
+          : 0,
+    };
+  }, [services]);
+
+  const toggleService = (index: number) => {
+    const updated = [...services];
+    updated[index] = { ...updated[index], isActive: !updated[index].isActive };
+    setServices(updated);
+    syncToRedux(updated);
+  };
+
+  const openEditSheet = (index: number) => {
+    const service = services[index];
+    setFormData({
+      name: service.name,
+      description: service.description || "",
+      duration: service.duration,
+      price: String(service.price),
+    });
+    setEditingIndex(index);
+    setIsEditMode(true);
+    bottomSheetModalRef.current?.present();
+  };
+
+  const openCreateSheet = () => {
+    setFormData({ name: "", description: "", duration: "", price: "" });
+    setIsEditMode(false);
+    setEditingIndex(null);
+    bottomSheetModalRef.current?.present();
+  };
+
+  const handleSave = () => {
+    if (!formData.name.trim() || !formData.price.trim()) {
+      Alert.alert("Required", "Service name and price are required.");
+      return;
+    }
+
+    let updatedList = [...services];
+
+    if (isEditMode && editingIndex !== null) {
+      updatedList[editingIndex] = {
+        ...updatedList[editingIndex],
+        ...formData,
+        price: formData.price,
+      };
+    } else {
+      const newItem = {
+        ...formData,
+        isActive: true,
+        bookings: 0,
+        id: Date.now().toString(),
+      };
+      updatedList.push(newItem);
+    }
+
+    setServices(updatedList);
+    syncToRedux(updatedList);
+    bottomSheetModalRef.current?.dismiss();
+  };
+
+  const syncToRedux = (newList: any[]) => {
+    dispatch(
+      updateServices({
+        services: newList,
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+  };
+
   return (
-    <View>
-      <Text>services</Text>
-    </View>
-  )
+    <BottomSheetModalProvider>
+      <View style={styles.container}>
+        <View style={[styles.header, { backgroundColor: themeColor }]}>
+          <View style={styles.headerContent}>
+            <TouchableOpacity
+              onPress={() => {
+                /* router.back() */
+              }}
+              hitSlop={12}
+            >
+              <Ionicons name="chevron-back" size={28} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.screenTitle}>My Services</Text>
+          </View>
+
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{stats.activeCount}</Text>
+              <Text style={styles.statLabel}>Active</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{stats.avgDuration}m</Text>
+              <Text style={styles.statLabel}>Avg Time</Text>
+            </View>
+          </View>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {services.map((service, index) => (
+            <View key={service.id || index} style={styles.serviceCard}>
+              <View style={styles.cardHeader}>
+                <View style={styles.serviceInfo}>
+                  <Text style={styles.serviceName}>{service.name}</Text>
+                  <Text style={styles.serviceMeta}>
+                    {service.duration} • ₹{service.price}
+                  </Text>
+                </View>
+                <Switch
+                  value={service.isActive !== false}
+                  onValueChange={() => toggleService(index)}
+                  trackColor={{ false: "#D1D5DB", true: themeColor + "80" }}
+                  thumbColor={
+                    service.isActive !== false ? themeColor : "#f4f3f4"
+                  }
+                />
+              </View>
+
+              {service.description ? (
+                <Text style={styles.serviceDescription}>
+                  {service.description}
+                </Text>
+              ) : null}
+
+              <View style={styles.cardFooter}>
+                <Text style={[styles.bookingCount, { color: themeColor }]}>
+                  {service.bookings || 0} bookings
+                </Text>
+                <TouchableOpacity onPress={() => openEditSheet(index)}>
+                  <Text style={[styles.editButtonText, { color: themeColor }]}>
+                    Edit
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+
+          <TouchableOpacity
+            style={[
+              styles.addNewCard,
+              { borderColor: themeColor, backgroundColor: themeColor + "08" },
+            ]}
+            onPress={openCreateSheet}
+          >
+            <View
+              style={[
+                styles.addIconCircle,
+                { backgroundColor: themeColor + "15" },
+              ]}
+            >
+              <Ionicons name="add" size={32} color={themeColor} />
+            </View>
+            <Text style={[styles.addNewTitle, { color: themeColor }]}>
+              Add New Service
+            </Text>
+          </TouchableOpacity>
+
+          <View style={{ height: 100 }} />
+        </ScrollView>
+
+        <BottomSheetModal
+          ref={bottomSheetModalRef}
+          index={0}
+          snapPoints={snapPoints}
+          backgroundStyle={styles.sheetBackground}
+          handleIndicatorStyle={{ backgroundColor: themeColor + "40" }}
+        >
+          <BottomSheetView style={styles.sheetContent}>
+            <Text style={styles.sheetTitle}>
+              {isEditMode ? "Edit Service" : "Create Service"}
+            </Text>
+
+            <TextInput
+              style={[styles.input, { borderColor: "#E5E7EB" }]}
+              placeholder="Service Name *"
+              value={formData.name}
+              onChangeText={(t) => setFormData({ ...formData, name: t })}
+            />
+
+            <TextInput
+              style={[
+                styles.input,
+                styles.textArea,
+                { borderColor: "#E5E7EB" },
+              ]}
+              placeholder="Description"
+              multiline
+              value={formData.description}
+              onChangeText={(t) => setFormData({ ...formData, description: t })}
+            />
+
+            <View style={styles.rowInputs}>
+              <TextInput
+                style={[
+                  styles.input,
+                  styles.halfInput,
+                  { borderColor: "#E5E7EB" },
+                ]}
+                placeholder="Duration (e.g. 30m)"
+                value={formData.duration}
+                onChangeText={(t) => setFormData({ ...formData, duration: t })}
+              />
+              <TextInput
+                style={[
+                  styles.input,
+                  styles.halfInput,
+                  { borderColor: "#E5E7EB" },
+                ]}
+                placeholder="Price (₹) *"
+                keyboardType="numeric"
+                value={formData.price}
+                onChangeText={(t) => setFormData({ ...formData, price: t })}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.primaryButton, { backgroundColor: themeColor }]}
+              onPress={handleSave}
+            >
+              <Text style={styles.primaryButtonText}>
+                {isEditMode ? "Save Changes" : "Add Service"}
+              </Text>
+            </TouchableOpacity>
+          </BottomSheetView>
+        </BottomSheetModal>
+      </View>
+    </BottomSheetModalProvider>
+  );
 }
 
-export default services
-
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  header: {
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  screenTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "white",
+    marginLeft: 10,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 12,
+    padding: 12,
+  },
+  statItem: { flex: 1, alignItems: "center" },
+  statValue: { fontSize: 20, fontWeight: "bold", color: "white" },
+  statLabel: { fontSize: 12, color: "rgba(255,255,255,0.9)" },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: "rgba(255,255,255,0.3)",
+  },
+  scrollContent: { padding: 20 },
+  serviceCard: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 15,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between" },
+  serviceInfo: { flex: 1 },
+  serviceName: { fontSize: 16, fontWeight: "bold", color: "#1F2937" },
+  serviceMeta: { fontSize: 14, color: "#6B7280", marginTop: 2 },
+  serviceDescription: { fontSize: 14, color: "#4B5563", marginTop: 8 },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
+  bookingCount: { fontSize: 13, fontWeight: "600" },
+  editButtonText: { fontWeight: "bold" },
+  addNewCard: {
+    borderStyle: "dashed",
+    borderWidth: 1.5,
+    borderRadius: 16,
+    padding: 25,
+    alignItems: "center",
+  },
+  addIconCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  addNewTitle: { fontSize: 16, fontWeight: "bold" },
+  sheetBackground: { backgroundColor: "white" },
+  sheetContent: { padding: 20 },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  input: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 15 },
+  textArea: { height: 80, textAlignVertical: "top" },
+  rowInputs: { flexDirection: "row", gap: 10 },
+  halfInput: { flex: 1 },
+  primaryButton: {
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  primaryButtonText: { color: "white", fontWeight: "bold", fontSize: 16 },
+});

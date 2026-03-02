@@ -1,8 +1,7 @@
 import { useReligion } from "@/contexts/ReligionContext";
-import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
 
 export default function TabsLayout() {
   const { religion } = useReligion();
@@ -32,33 +31,39 @@ export default function TabsLayout() {
       screenOptions={{
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: "#6B7280",
+
         tabBarStyle: {
+          position: "relative", // 👈 FIXED POSITION
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 65, // 👈 Fixed height
           backgroundColor: "#FFFFFF",
           borderTopWidth: 1,
           borderTopColor: "#E5E7EB",
-          paddingTop: 5,
-          paddingBottom: 5,
-          height: 60,
+          elevation: 10, // Android shadow
+          shadowColor: "#000", // iOS shadow
+          shadowOpacity: 0.1,
+          shadowRadius: 5,
         },
+
+        tabBarItemStyle: {
+          paddingVertical: 6,
+        },
+
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "500",
         },
-        headerStyle: {
-          backgroundColor: theme.primary,
-        },
-        headerTintColor: "#FFFFFF",
-        headerTitleStyle: {
-          fontWeight: "600",
-          fontSize: 18,
-        },
+
+        headerShown: false,
       }}
     >
       <Tabs.Screen
         name="home"
         options={{
           title: "Home",
-          headerShown:false,
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
@@ -69,30 +74,30 @@ export default function TabsLayout() {
         name="bookings"
         options={{
           title: "Bookings",
-           headerShown:false,
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar" size={size} color={color} />
           ),
-          headerTitle: "My Bookings",// Example badge count
+          headerTitle: "My Bookings", // Example badge count
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
           title: "Messages",
-           headerShown:false,
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles" size={size} color={color} />
           ),
           headerTitle: "Messages",
-        // Example badge count
+          // Example badge count
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-           headerShown:false,
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),

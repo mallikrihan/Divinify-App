@@ -1,10 +1,9 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,9 +11,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 
 import { useReligion } from "@/contexts/ReligionContext";
 import { saveReligiousCertification } from "@/lib/providerService";
+import { updateCertification } from "@/store/onboardingSlice";
+import { RootState } from "@/store/store";
 import { useTheme } from "@/theme/ThemeProvider";
 import { useUser } from "../../contexts/Usercontext";
 
@@ -23,13 +25,40 @@ export default function ReligiousCertification() {
   const { religion } = useReligion();
   const { primary } = useTheme();
   const { user } = useUser();
+  const dispatch = useDispatch();
 
-  const [certificateFile, setCertificateFile] = useState<string | null>(null);
-  const [referenceType, setReferenceType] = useState<string | null>(null);
-  const [institutionName, setInstitutionName] = useState("");
-  const [referencePerson, setReferencePerson] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
-  const [referenceLetter, setReferenceLetter] = useState<string | null>(null);
+  // Get saved certification data from Redux
+  const savedCertification = useSelector(
+    (state: RootState) => state.onboarding.certification,
+  );
+
+  // Initialize state with saved data if available
+  const [certificateFile, setCertificateFile] = useState<string | null>(
+    savedCertification?.certificates?.[0]?.file || null,
+  );
+  const [referenceType, setReferenceType] = useState<string | null>(
+    savedCertification?.referenceType || null,
+  );
+  const [institutionName, setInstitutionName] = useState(
+    savedCertification?.institutionName || "",
+  );
+  const [referencePerson, setReferencePerson] = useState(
+    savedCertification?.referencePerson || "",
+  );
+  const [contactPhone, setContactPhone] = useState(
+    savedCertification?.referencePhone || "",
+  );
+  const [referenceLetter, setReferenceLetter] = useState<string | null>(
+    savedCertification?.referenceLetter || null,
+  );
+
+  // Check if coming from review screen
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("fromReview") === "true") {
+      // Optional: Show message or highlight
+    }
+  }, []);
 
   // 🎨 DYNAMIC THEME COLOR
   const activeColor = religion === "islam" ? "#00A86B" : primary;
@@ -38,6 +67,7 @@ export default function ReligiousCertification() {
   const handleUploadCertificate = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
       quality: 0.8,
     });
     if (!result.canceled) setCertificateFile(result.assets[0].uri);
@@ -46,6 +76,7 @@ export default function ReligiousCertification() {
   const handleUploadLetter = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
       quality: 0.8,
     });
     if (!result.canceled) setReferenceLetter(result.assets[0].uri);
@@ -61,6 +92,27 @@ export default function ReligiousCertification() {
       return Alert.alert("Enter reference contact name");
     if (!contactPhone.trim()) return Alert.alert("Enter contact phone");
 
+    // Prepare certification data for Redux
+    const certificationData = {
+      certificates: [
+        {
+          id: Date.now().toString(),
+          name: "Religious Certificate",
+          file: certificateFile,
+          issueDate: new Date().toISOString(),
+        },
+      ],
+      referenceType: referenceType,
+      institutionName: institutionName.trim(),
+      referencePerson: referencePerson.trim(),
+      referencePhone: contactPhone.trim(),
+      referenceEmail: "", // You can add email field if needed
+      referenceLetter: referenceLetter,
+    };
+
+    // Save to Redux
+    dispatch(updateCertification(certificationData));
+
     try {
       const idToUse = user?.id || "temp_provider_id";
       await saveReligiousCertification(idToUse, {
@@ -71,20 +123,40 @@ export default function ReligiousCertification() {
         contactPhone,
         referenceLetter,
       });
-      router.push("/(provider-onboarding)/serviceoffer");
+
+      // Check if returning to review
+      const params = new URLSearchParams(window.location.search);
+      if (
+        params.get("fromReview") === "true" ||
+        params.get("fromEdit") === "true"
+      ) {
+        router.back();
+      } else {
+        router.push("/(provider-onboarding)/serviceoffer");
+      }
     } catch (error) {
-      router.push("/(provider-onboarding)/serviceoffer");
+      // Still navigate even if API fails (for now)
+      const params = new URLSearchParams(window.location.search);
+      if (
+        params.get("fromReview") === "true" ||
+        params.get("fromEdit") === "true"
+      ) {
+        router.back();
+      } else {
+        router.push("/(provider-onboarding)/serviceoffer");
+      }
     }
   };
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: activeColor }}>
+    <View style={{ flex: 1, backgroundColor: activeColor }}>
       <ScrollView bounces={false} style={styles.container}>
         <View style={[styles.header, { backgroundColor: activeColor }]}>
           <View style={styles.headerTop}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
+            <View style={{ top: 10 }}>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Ionicons name="arrow-back" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
             <Text style={styles.stepText}>Step 4 of 7</Text>
           </View>
           <View style={styles.whiteBadge}>
@@ -212,6 +284,9 @@ export default function ReligiousCertification() {
           <Text style={[styles.label, { marginTop: 20 }]}>
             Reference Letter (Optional)
           </Text>
+          <Text style={{ top: -6, color: "#7d8399" }}>
+            Upload official recommendation letter
+          </Text>
           <TouchableOpacity
             onPress={handleUploadLetter}
             style={styles.uploadBox}
@@ -223,16 +298,53 @@ export default function ReligiousCertification() {
                 : "Tap to upload reference letter"}
             </Text>
           </TouchableOpacity>
-
+          <View style={styles.timelineBox1}>
+            <Ionicons name="alert-circle" size={20} color="#D97706" />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.timelineTitle1}>Verification Process</Text>
+              <Text style={styles.timelineText1}>
+                We may contact your refrence for verification. This helps
+                maintain the quality and authenticity of our scholar network.
+              </Text>
+            </View>
+          </View>
           <TouchableOpacity
             onPress={handleContinue}
             style={[styles.continueBtn, { backgroundColor: activeColor }]}
           >
             <Text style={styles.continueBtnText}>Continue to Next Step →</Text>
           </TouchableOpacity>
+          <View style={styles.timelineBox}>
+            <Ionicons name="shield-checkmark" size={20} color="#1E40AF" />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.timelineTitle}>Privacy & Security</Text>
+              <Text style={styles.timelineText}>
+                All documents are encrypted and handled with strict
+                confidentailly. Reference contacts are safety for verification
+                purposer
+              </Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+      <TouchableOpacity
+        style={[styles.helpButton, { backgroundColor: primary }]}
+        onPress={() => {}}
+      >
+        <Ionicons name="information-circle-outline" size={18} color="white" />
+        <View>
+          <Text
+            style={{
+              height: 10,
+              fontSize: 8,
+              color: "white",
+            }}
+          >
+            Get Help
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -259,7 +371,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-  stepText: { color: "white", fontWeight: "bold", bottom: -10 },
+  stepText: { color: "white", fontWeight: "bold", bottom: -15 },
   whiteBadge: {
     backgroundColor: "white",
     padding: 12,
@@ -342,7 +454,44 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     marginTop: 30,
-    marginBottom: 40,
+    marginBottom: 10,
   },
   continueBtnText: { color: "white", fontWeight: "bold", fontSize: 16 },
+  timelineBox: {
+    flexDirection: "row",
+    backgroundColor: "#EFF6FF",
+    padding: 15,
+    borderRadius: 15,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#FEF3C7",
+  },
+  timelineTitle: { color: "#1E40AF", fontWeight: "700", fontSize: 14 },
+  timelineText: { color: "#1E40AF", fontSize: 12, marginTop: 2 },
+  timelineBox1: {
+    flexDirection: "row",
+    backgroundColor: "#FFFBEB",
+    padding: 15,
+    borderRadius: 15,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#FEF3C7",
+  },
+  timelineTitle1: { color: "#D97706", fontWeight: "700", fontSize: 14 },
+  timelineText1: { color: "#D97706", fontSize: 12, marginTop: 2 },
+  helpButton: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
 });

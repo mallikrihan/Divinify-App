@@ -8,8 +8,10 @@ import { useTheme } from "@/theme/ThemeProvider";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Speech from "expo-speech";
 import { useState } from "react";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,13 +19,13 @@ import {
   View,
 } from "react-native";
 
-import Icon from "react-native-vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setCurrentStep,
   updateReligiousDetails,
 } from "../../store/onboardingSlice";
 import { RootState } from "../../store/store";
+
 export default function ReligiousAffiliation() {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -31,7 +33,7 @@ export default function ReligiousAffiliation() {
   const { primary } = useTheme();
   const { returnTo } = useLocalSearchParams<{ returnTo: string }>();
   const isEditing = returnTo === "review";
-  // Get saved data from Redux
+
   const savedData = useSelector(
     (state: RootState) => state.onboarding.religiousDetails,
   );
@@ -50,12 +52,7 @@ export default function ReligiousAffiliation() {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
     savedData?.languages || [],
   );
-  const [specialization, setSpecialization] = useState<string>(
-    savedData?.specialization || "",
-  );
-  const [community, setCommunity] = useState<string>(
-    savedData?.community || "",
-  );
+  const [isListening, setIsListening] = useState(false);
 
   const languages = [
     "Arabic",
@@ -66,6 +63,18 @@ export default function ReligiousAffiliation() {
     "Bengali",
   ];
 
+  const startVoiceAssistant = () => {
+    setIsListening(true);
+    const message =
+      "Please select your scholar type, experience level, and the languages you speak such as Hindi, English or Kannada.";
+
+    Speech.speak(message, {
+      language: "en",
+      onDone: () => setIsListening(false),
+      onError: () => setIsListening(false),
+    });
+  };
+
   const toggleLanguage = (lang: string) => {
     if (selectedLanguages.includes(lang)) {
       setSelectedLanguages(selectedLanguages.filter((l) => l !== lang));
@@ -75,77 +84,45 @@ export default function ReligiousAffiliation() {
   };
 
   const scholarTypes = getScholarTypes(religion);
+
   const handleContinue = () => {
-    // 1. Validation Logic
     if (!scholarType || !experience || selectedLanguages.length === 0) {
-      alert(
+      Alert.alert(
+        "Required Fields",
         "Please select scholar type, experience, and at least one language",
       );
       return;
     }
 
-    // 2. Save to Redux (Using the variables from your useState)
     dispatch(
       updateReligiousDetails({
-        scholarType: scholarType,
-        specialization: specialization,
+        scholarType,
         languages: selectedLanguages,
         yearsOfExperience: experience,
       }),
     );
 
-    // 3. Conditional Navigation
     if (isEditing) {
-      // Jump straight back to Review screen
       router.replace({
         pathname: "/(provider-onboarding)/reviewsubmit",
         params: { updated: "true" },
       });
     } else {
-      // Normal onboarding flow: move to step 3
       dispatch(setCurrentStep(3));
       router.push("/(provider-onboarding)/identityverification");
     }
   };
-  // const handleContinue = () => {
-  //   if (!scholarType || !experience || selectedLanguages.length === 0) {
-  //     alert(
-  //       "Please select scholar type, experience, and at least one language",
-  //     );
-  //     return;
-  //   }
-
-  //   console.log("Sending to Redux:", {
-  //     scholarType,
-  //     specialization,
-  //     community,
-  //     languages: selectedLanguages,
-  //     yearsOfExperience: experience,
-  //   });
-
-  //   dispatch(
-  //     updateReligiousDetails({
-  //       scholarType: scholarType,
-  //       // specialization: specialization,
-  //       // community: community,
-  //       languages: selectedLanguages,
-  //       yearsOfExperience: experience,
-  //     }),
-  //   );
-
-  //   dispatch(setCurrentStep(3));
-  //   router.push("/(provider-onboarding)/identityverification");
-  // };
-  // started here mainy
 
   return (
     <View style={{ flex: 1, backgroundColor: primary }}>
       <ScrollView bounces={false} style={{ flex: 1, backgroundColor: "#fff" }}>
-        {/* HEADER SECTION */}
         <View style={[styles.header, { backgroundColor: primary }]}>
           <View style={styles.headerTopRow}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Icon name="arrow-back" size={24} color="#fff" />
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ marginTop: 27 }}
+            >
+              <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
             <View style={styles.stepBadge}>
               <Text style={styles.stepText}>Step 2 of 7</Text>
@@ -167,11 +144,8 @@ export default function ReligiousAffiliation() {
           </View>
         </View>
 
-        {/* CONTENT SECTION */}
         <View style={styles.formContent}>
-          {/* DYNAMIC PROGRESS BAR */}
           <View style={styles.progressContainer}>
-            {/* The backgroundColor here now uses the 'primary' variable */}
             <View
               style={[
                 styles.progressBar,
@@ -180,7 +154,31 @@ export default function ReligiousAffiliation() {
             />
           </View>
 
-          {/* SCHOLAR TYPE SELECTION */}
+          <TouchableOpacity
+            onPress={startVoiceAssistant}
+            style={[
+              styles.voiceBar,
+              {
+                borderColor: primary,
+                backgroundColor: isListening ? `${primary}10` : "#F9FAFB",
+              },
+            ]}
+          >
+            <Ionicons
+              name={isListening ? "mic" : "mic-outline"}
+              size={22}
+              color={isListening ? "red" : primary}
+            />
+            <Text
+              style={[
+                styles.voiceText,
+                { color: isListening ? "red" : "#4B5563" },
+              ]}
+            >
+              {isListening ? "Assistant Speaking..." : "Tap for Voice Guidance"}
+            </Text>
+          </TouchableOpacity>
+
           <Text style={styles.label}>
             Scholar Type <Text style={{ color: primary }}>*</Text>
           </Text>
@@ -215,7 +213,6 @@ export default function ReligiousAffiliation() {
                     />
                   )}
                 </View>
-
                 <View
                   style={[
                     styles.cardIconContainer,
@@ -228,7 +225,6 @@ export default function ReligiousAffiliation() {
                     color={primary}
                   />
                 </View>
-
                 <View style={{ flex: 1 }}>
                   <Text
                     style={[styles.cardTitle, isSelected && { color: primary }]}
@@ -243,7 +239,6 @@ export default function ReligiousAffiliation() {
             );
           })}
 
-          {/* EXPERIENCE DROPDOWN */}
           <Text style={[styles.label, { marginTop: 25 }]}>
             Years of Experience <Text style={{ color: primary }}>*</Text>
           </Text>
@@ -271,7 +266,6 @@ export default function ReligiousAffiliation() {
             </Picker>
           </View>
 
-          {/* LANGUAGES GRID */}
           <Text style={[styles.label, { marginTop: 25 }]}>
             Languages Spoken <Text style={{ color: primary }}>*</Text>
           </Text>
@@ -300,18 +294,24 @@ export default function ReligiousAffiliation() {
                     ]}
                   >
                     {isSelected && (
-                      <Icon name="checkmark" size={12} color="#fff" />
+                      <Ionicons name="checkmark" size={12} color="#fff" />
                     )}
                   </View>
-                  <Text style={styles.langText}>{lang}</Text>
+                  <Text
+                    style={[
+                      styles.langText,
+                      isSelected && { color: primary, fontWeight: "700" },
+                    ]}
+                  >
+                    {lang}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
           </View>
 
-          {/* INFO CARD */}
           <View style={styles.verificationNotice}>
-            <Icon name="shield-checkmark" size={20} color="#D97706" />
+            <Ionicons name="shield-checkmark" size={20} color="#D97706" />
             <View style={{ flex: 1, marginLeft: 10 }}>
               <Text style={styles.noticeTitle}>Community Verification</Text>
               <Text style={styles.noticeText}>
@@ -321,19 +321,6 @@ export default function ReligiousAffiliation() {
             </View>
           </View>
 
-          {/* PRIMARY BUTTON */}
-          {/* <TouchableOpacity
-            onPress={handleContinue}
-            style={[styles.continueBtn, { backgroundColor: primary }]}
-          >
-            <Text style={styles.continueBtnText}>Continue to Next Step</Text>
-            <Icon
-              name="arrow-forward"
-              size={18}
-              color="#fff"
-              style={{ marginLeft: 8 }}
-            />
-          </TouchableOpacity> */}
           <TouchableOpacity
             onPress={handleContinue}
             style={[styles.mainButton, { backgroundColor: primary }]}
@@ -349,6 +336,16 @@ export default function ReligiousAffiliation() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <TouchableOpacity
+        style={[
+          styles.helpButton,
+          { backgroundColor: isListening ? "#EF4444" : primary },
+        ]}
+        onPress={startVoiceAssistant}
+      >
+        <Ionicons name={isListening ? "mic" : "mic"} size={28} color="white" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -365,6 +362,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 12,
     borderRadius: 20,
+    marginTop: 27,
   },
   stepText: { color: "#fff", fontSize: 12, fontWeight: "700" },
   headerCenter: { alignItems: "center", marginTop: 15 },
@@ -400,9 +398,21 @@ const styles = StyleSheet.create({
     height: 6,
     backgroundColor: "#E5E7EB",
     borderRadius: 3,
-    marginBottom: 25,
+    marginBottom: 20,
   },
   progressBar: { height: 6, borderRadius: 3 },
+  voiceBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    marginBottom: 20,
+    justifyContent: "center",
+    gap: 8,
+  },
+  voiceText: { fontSize: 13, fontWeight: "600" },
   label: { fontSize: 16, fontWeight: "700", color: "#1F2937" },
   subLabel: { fontSize: 13, color: "#6B7280", marginTop: 4, marginBottom: 15 },
   typeCard: {
@@ -481,15 +491,6 @@ const styles = StyleSheet.create({
   },
   noticeTitle: { fontSize: 14, fontWeight: "700", color: "#92400E" },
   noticeText: { fontSize: 12, color: "#B45309", marginTop: 2, lineHeight: 18 },
-  continueBtn: {
-    height: 56,
-    borderRadius: 16,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 30,
-  },
-  continueBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
   mainButton: {
     flexDirection: "row",
     height: 55,
@@ -499,15 +500,18 @@ const styles = StyleSheet.create({
     marginTop: 20,
     gap: 10,
     elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "700",
+  buttonText: { color: "white", fontSize: 16, fontWeight: "700" },
+  helpButton: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 5,
   },
 });
 

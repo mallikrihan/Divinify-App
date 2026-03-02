@@ -37,7 +37,7 @@ export default function ApplicationReview() {
   const theme = getTheme();
 
   useEffect(() => {
-    const totalDuration = 20000; // 30 Seconds
+    const totalDuration = 10000; // 30 Seconds
     const intervalTime = 100; // Update every 100ms
     const increment = 100 / (totalDuration / intervalTime);
 
@@ -72,9 +72,9 @@ export default function ApplicationReview() {
             </View>
             <View style={styles.badgeIcon}>
               <MaterialCommunityIcons
-                name="hourglass-empty"
+                name="hourglass-outline"
                 size={16}
-                color="#fff"
+                color="#dd1111"
               />
             </View>
           </View>
@@ -232,27 +232,6 @@ export default function ApplicationReview() {
               </Text>
             </TouchableOpacity>
           </View>
-          {/* <View style={styles.helpContainer}>
-            <View
-              style={[styles.helpIconBg, { backgroundColor: theme.secondary }]}
-            >
-              <Ionicons name="headset" size={24} color={theme.primary} />
-            </View>
-            <Text style={styles.helpTitle}>Need Help?</Text>
-            <TouchableOpacity
-              style={[styles.callBtn, { backgroundColor: theme.primary }]}
-            >
-              <Ionicons name="call" size={18} color="#fff" />
-              <Text style={styles.btnTextWhite}>Call Support</Text>
-            </TouchableOpacity>
-          </View> */}
-
-          {/* <View style={styles.safeContainer}>
-            <Ionicons name="lock-closed" size={14} color={theme.primary} />
-            <Text style={[styles.safeText, { color: theme.primary }]}>
-              Secure Verification
-            </Text>
-          </View> */}
           <View style={styles.safeContainer}>
             <Ionicons name="lock-closed" size={14} color={theme.primary} />
             <Text style={[styles.safeText, { color: theme.primary }]}>
