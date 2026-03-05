@@ -31,8 +31,8 @@ export default function PersonalDetails() {
 
   const savedData = useSelector(
     (state: RootState) =>
-      state.onboarding?.personalDetails || ({} as Record<string, any>),
-  );
+      (state as any).onboarding?.personalDetails,
+  ) || ({} as Record<string, any>);
 
   const [formData, setFormData] = useState({
     fullName: savedData?.name || user?.name || "",
@@ -388,7 +388,7 @@ export default function PersonalDetails() {
 
       <TouchableOpacity
         style={[styles.helpButton, { backgroundColor: primary }]}
-        onPress={() => {}}
+        onPress={() => { }}
       >
         <Ionicons name="information-circle-outline" size={18} color="white" />
         <View>

@@ -53,8 +53,7 @@
 
 //   const handlePickDocument = async () => {
 //     try {
-//       const result = await ImagePicker.launchImageLibraryAsync({
-//         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+//         mediaTypes: ['images'],
 //         allowsEditing: true,
 //         aspect: [4, 3],
 //         quality: 0.8,
@@ -532,10 +531,10 @@ export default function IdentityVerification() {
   const dispatch = useDispatch();
 
   const savedVerification = useSelector(
-    (state: RootState) => state.onboarding.verification,
+    (state: RootState) => (state as any).onboarding.verification,
   );
 
-  const [idType, setIdType] = useState<string | null>(
+  const [idType, setIdType] = useState<"passport" | "nationalId" | "drivingLicense" | null>(
     savedVerification?.idType || null,
   );
   const [idNumber, setIdNumber] = useState(savedVerification?.idNumber || "");
@@ -547,9 +546,9 @@ export default function IdentityVerification() {
   );
 
   const idOptions = [
-    { label: "Passport", sub: "International ID document", icon: "🛂" },
-    { label: "National ID Card", sub: "Government issued ID", icon: "🆔" },
-    { label: "Driving License", sub: "Valid driver's license", icon: "🚗" },
+    { label: "Passport", value: "passport" as const, sub: "International ID document", icon: "🛂" },
+    { label: "National ID Card", value: "nationalId" as const, sub: "Government issued ID", icon: "🆔" },
+    { label: "Driving License", value: "drivingLicense" as const, sub: "Valid driver's license", icon: "🚗" },
   ];
 
   const { returnTo, fromReview } = useLocalSearchParams<{
@@ -561,7 +560,7 @@ export default function IdentityVerification() {
   const handlePickDocument = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
@@ -611,7 +610,7 @@ export default function IdentityVerification() {
       idNumber: idNumber.trim().toUpperCase(),
       documentImage,
       selfieImage: selfieImage || null,
-      verificationStatus: selfieImage ? "pending" : "document_uploaded",
+      verificationStatus: "pending" as "pending" | "verified" | "rejected",
       submittedAt: new Date().toISOString(),
     };
 
@@ -645,243 +644,238 @@ export default function IdentityVerification() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <ScrollView>
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" />
 
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: primary }]}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
-          <View style={styles.headerBadge}>
-            <Text style={styles.headerBadgeText}>Step 3 of 7</Text>
-          </View>
-        </View>
-
-        <View style={styles.headerContent}>
-          <View style={styles.headerIconContainer}>
-            <Text style={styles.headerIcon}>🛡️</Text>
-          </View>
-          <Text style={styles.headerTitle}>Verify Your Identity</Text>
-          <Text style={styles.headerSubtitle}>
-            Secure verification for community trust
-          </Text>
-        </View>
-      </View>
-
-      {/* Main Content */}
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
-      >
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressTrack}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: "42%", backgroundColor: primary },
-              ]}
-            />
-          </View>
-        </View>
-
-        {/* ID Type Selection */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Government ID Type</Text>
-          <Text style={styles.sectionSubtitle}>
-            Select your preferred ID document
-          </Text>
-
-          {idOptions.map((option) => (
+        {/* Header */}
+        <View style={[styles.header, { backgroundColor: primary }]}>
+          <View style={styles.headerTop}>
             <TouchableOpacity
-              key={option.label}
-              onPress={() => setIdType(option.label)}
-              style={[
-                styles.optionCard,
-                idType === option.label && styles.optionCardSelected,
-                idType === option.label && { borderColor: primary },
-              ]}
+              onPress={() => router.back()}
+              style={styles.backButton}
             >
-              <View style={styles.optionIconContainer}>
-                <Text style={styles.optionIcon}>{option.icon}</Text>
-              </View>
-              <View style={styles.optionContent}>
-                <Text style={styles.optionTitle}>{option.label}</Text>
-                <Text style={styles.optionSubtitle}>{option.sub}</Text>
-              </View>
-              <View
-                style={[
-                  styles.radioOuter,
-                  idType === option.label && { borderColor: primary },
-                ]}
-              >
-                {idType === option.label && (
-                  <View
-                    style={[styles.radioInner, { backgroundColor: primary }]}
-                  />
-                )}
-              </View>
+              <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* ID Number Input */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ID Number</Text>
-          <Text style={styles.sectionSubtitle}>
-            Enter your ID number as shown on your document
-          </Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="e.g., AB123456"
-              value={idNumber}
-              onChangeText={setIdNumber}
-              autoCapitalize="characters"
-              style={styles.input}
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-        </View>
-
-        {/* Document Upload */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Upload ID Document</Text>
-          <Text style={styles.sectionSubtitle}>
-            Upload a clear photo of your ID (front side)
-          </Text>
-          <TouchableOpacity
-            onPress={handlePickDocument}
-            style={styles.uploadArea}
-          >
-            {documentImage ? (
-              <Image
-                source={{ uri: documentImage }}
-                style={styles.uploadedImage}
-              />
-            ) : (
-              <View style={styles.uploadPlaceholder}>
-                <View
-                  style={[
-                    styles.uploadIconCircle,
-                    { backgroundColor: primary + "20" },
-                  ]}
-                >
-                  <Text style={[styles.uploadIcon, { color: primary }]}>
-                    📄
-                  </Text>
-                </View>
-                <Text style={styles.uploadTitle}>Tap to upload document</Text>
-                <Text style={styles.uploadHint}>PNG, JPG up to 5MB</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Selfie Upload */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Selfie Verification</Text>
-            <View style={styles.optionalBadge}>
-              <Text style={styles.optionalText}>Optional</Text>
+            <View style={styles.headerBadge}>
+              <Text style={styles.headerBadgeText}>Step 3 of 7</Text>
             </View>
           </View>
-          <Text style={styles.sectionSubtitle}>
-            Take a selfie for enhanced verification
-          </Text>
-          <TouchableOpacity
-            onPress={handleTakeSelfie}
-            style={styles.uploadArea}
-          >
-            {selfieImage ? (
-              <Image
-                source={{ uri: selfieImage }}
-                style={styles.uploadedImage}
+
+          <View style={styles.headerContent}>
+            <View style={styles.headerIconContainer}>
+              <Text style={styles.headerIcon}>🛡️</Text>
+            </View>
+            <Text style={styles.headerTitle}>Verify Your Identity</Text>
+            <Text style={styles.headerSubtitle}>
+              Secure verification for community trust
+            </Text>
+          </View>
+        </View>
+
+        {/* Main Content */}
+        <ScrollView
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.contentContainer}
+        >
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressTrack}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: "42%", backgroundColor: primary },
+                ]}
               />
-            ) : (
-              <View style={styles.uploadPlaceholder}>
+            </View>
+          </View>
+
+          {/* ID Type Selection */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Government ID Type</Text>
+            <Text style={styles.sectionSubtitle}>
+              Select your preferred ID document
+            </Text>
+
+            {idOptions.map((option) => (
+              <TouchableOpacity
+                key={option.label}
+                onPress={() => setIdType(option.value)}
+                style={[
+                  styles.optionCard,
+                  idType === option.value && styles.optionCardSelected,
+                  idType === option.value && { borderColor: primary },
+                ]}
+              >
+                <View style={styles.optionIconContainer}>
+                  <Text style={styles.optionIcon}>{option.icon}</Text>
+                </View>
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionTitle}>{option.label}</Text>
+                  <Text style={styles.optionSubtitle}>{option.sub}</Text>
+                </View>
                 <View
                   style={[
-                    styles.uploadIconCircle,
-                    { backgroundColor: "#DBEAFE" },
+                    styles.radioOuter,
+                    idType === option.value && { borderColor: primary },
                   ]}
                 >
-                  <Text style={styles.uploadIcon}>📸</Text>
+                  {idType === option.value && (
+                    <View
+                      style={[styles.radioInner, { backgroundColor: primary }]}
+                    />
+                  )}
                 </View>
-                <Text style={styles.uploadTitle}>Tap to take selfie</Text>
-                <Text style={styles.uploadHint}>Clear face photo required</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Security Notice */}
-        <View style={styles.securityCard}>
-          <View style={styles.securityIconContainer}>
-            <Text style={styles.securityIcon}>🔒</Text>
+              </TouchableOpacity>
+            ))}
           </View>
-          <View style={styles.securityContent}>
-            <Text style={styles.securityTitle}>Data Security</Text>
-            <Text style={styles.securityText}>
-              Your documents are encrypted and stored securely. We only use them
-              for verification purposes and never share with third parties.
+
+          {/* ID Number Input */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>ID Number</Text>
+            <Text style={styles.sectionSubtitle}>
+              Enter your ID number as shown on your document
             </Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="e.g., AB123456"
+                value={idNumber}
+                onChangeText={setIdNumber}
+                autoCapitalize="characters"
+                style={styles.input}
+                placeholderTextColor="#9CA3AF"
+              />
+            </View>
           </View>
-        </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionContainer}>
-          {!isEditing && (
+          {/* Document Upload */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Upload ID Document</Text>
+            <Text style={styles.sectionSubtitle}>
+              Upload a clear photo of your ID (front side)
+            </Text>
             <TouchableOpacity
-              onPress={handleSkip}
-              style={[styles.actionButton, styles.skipButton]}
+              onPress={handlePickDocument}
+              style={styles.uploadArea}
             >
-              <Text style={styles.skipButtonText}>Skip for now</Text>
+              {documentImage ? (
+                <Image
+                  source={{ uri: documentImage }}
+                  style={styles.uploadedImage}
+                />
+              ) : (
+                <View style={styles.uploadPlaceholder}>
+                  <View
+                    style={[
+                      styles.uploadIconCircle,
+                      { backgroundColor: primary + "20" },
+                    ]}
+                  >
+                    <Text style={[styles.uploadIcon, { color: primary }]}>
+                      📄
+                    </Text>
+                  </View>
+                  <Text style={styles.uploadTitle}>Tap to upload document</Text>
+                  <Text style={styles.uploadHint}>PNG, JPG up to 5MB</Text>
+                </View>
+              )}
             </TouchableOpacity>
-          )}
-          <TouchableOpacity
-            onPress={handleContinue}
-            style={[
-              styles.actionButton,
-              styles.continueButton,
-              { backgroundColor: primary },
-              isEditing && styles.fullWidthButton,
-            ]}
-          >
-            <Text style={styles.continueButtonText}>
-              {isEditing ? "Save & Return" : "Continue"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Timeline Info */}
-        <View style={styles.timelineCard}>
-          <View style={styles.timelineIconContainer}>
-            <Text style={styles.timelineIcon}>⏱️</Text>
           </View>
-          <View style={styles.timelineContent}>
-            <Text style={styles.timelineTitle}>Verification Timeline</Text>
-            <Text style={styles.timelineText}>
-              Identity verification typically takes 24–48 hours. You will
-              receive a notification once approved.
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
 
-      {/* Help Button */}
-      <TouchableOpacity
-        onPress={() => router.push("/booking/help")}
-        style={[styles.helpButton, { backgroundColor: primary }]}
-      >
-        <Text style={styles.helpButtonText}>?</Text>
-      </TouchableOpacity>
-    </View>
+          {/* Selfie Upload */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Selfie Verification</Text>
+              <View style={styles.optionalBadge}>
+                <Text style={styles.optionalText}>Optional</Text>
+              </View>
+            </View>
+            <Text style={styles.sectionSubtitle}>
+              Take a selfie for enhanced verification
+            </Text>
+            <TouchableOpacity
+              onPress={handleTakeSelfie}
+              style={styles.uploadArea}
+            >
+              {selfieImage ? (
+                <Image
+                  source={{ uri: selfieImage }}
+                  style={styles.uploadedImage}
+                />
+              ) : (
+                <View style={styles.uploadPlaceholder}>
+                  <View
+                    style={[
+                      styles.uploadIconCircle,
+                      { backgroundColor: "#DBEAFE" },
+                    ]}
+                  >
+                    <Text style={styles.uploadIcon}>📸</Text>
+                  </View>
+                  <Text style={styles.uploadTitle}>Tap to take selfie</Text>
+                  <Text style={styles.uploadHint}>Clear face photo required</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Security Notice */}
+          <View style={styles.securityCard}>
+            <View style={styles.securityIconContainer}>
+              <Text style={styles.securityIcon}>🔒</Text>
+            </View>
+            <View style={styles.securityContent}>
+              <Text style={styles.securityTitle}>Data Security</Text>
+              <Text style={styles.securityText}>
+                Your documents are encrypted and stored securely. We only use them
+                for verification purposes and never share with third parties.
+              </Text>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionContainer}>
+
+            <TouchableOpacity
+              onPress={handleContinue}
+              style={[
+                styles.actionButton,
+                styles.continueButton,
+                { backgroundColor: primary },
+                isEditing && styles.fullWidthButton,
+              ]}
+            >
+              <Text style={styles.continueButtonText}>
+                {isEditing ? "Save & Return" : "Continue"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Timeline Info */}
+          <View style={styles.timelineCard}>
+            <View style={styles.timelineIconContainer}>
+              <Text style={styles.timelineIcon}>⏱️</Text>
+            </View>
+            <View style={styles.timelineContent}>
+              <Text style={styles.timelineTitle}>Verification Timeline</Text>
+              <Text style={styles.timelineText}>
+                Identity verification typically takes 24–48 hours. You will
+                receive a notification once approved.
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Help Button */}
+        <TouchableOpacity
+          onPress={() => router.push("/booking/help")}
+          style={[styles.helpButton, { backgroundColor: primary }]}
+        >
+          <Text style={styles.helpButtonText}>?</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 

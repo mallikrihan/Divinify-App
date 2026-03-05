@@ -374,9 +374,9 @@ export default function MyServices() {
     return ["#6366F1", "#4F46E5"]; // Default Indigo gradient fallback
   }, [religion]);
 
-  const savedServices = useSelector(
-    (state: RootState) => (state as any).onboarding.services.services || [],
-  );
+  const savedServices = (useSelector(
+    (state: RootState) => (state as any).onboarding.services.services,
+  ) as any) || [];
   const [services, setServices] = useState(savedServices);
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);

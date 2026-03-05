@@ -16,7 +16,7 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <Image
-        source={require("@/assets/logos/logo.png")}
+        source={require("@/assets/logos/logo.jpg")}
         style={styles.logo}
       />
     </View>

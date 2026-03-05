@@ -264,9 +264,9 @@ export default function Profile() {
   const { user, updateUser } = useUser();
   const { religion } = useReligion();
 
-  const personalDetails = useSelector(
-    (state: RootState) => (state as any).onboarding?.personalDetails || {},
-  ) as any;
+  const personalDetails = (useSelector(
+    (state: RootState) => (state as any).onboarding?.personalDetails,
+  ) as any) || {};
 
   // State for all editable fields - ONLY ONE ADDRESS FIELD
   const [userData, setUserData] = useState({
