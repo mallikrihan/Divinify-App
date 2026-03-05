@@ -111,14 +111,14 @@ const TimePickerModal = ({
   );
 
   return (
-    <ScrollView>
+    <>
       <Modal
         visible={visible}
         transparent
         animationType="slide"
         onRequestClose={onClose}
       >
-        <ScrollView>
+        <View style={{ flex: 1 }}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
@@ -195,9 +195,9 @@ const TimePickerModal = ({
               </TouchableOpacity>
             </View>
           </View>
-        </ScrollView>
+        </View>
       </Modal>
-    </ScrollView>
+    </>
   );
 };
 

@@ -29,7 +29,7 @@ export default function ReligiousCertification() {
 
   // Get saved certification data from Redux
   const savedCertification = useSelector(
-    (state: RootState) => state.onboarding.certification,
+    (state: RootState) => (state as any).onboarding.certification,
   );
 
   // Initialize state with saved data if available
@@ -66,7 +66,7 @@ export default function ReligiousCertification() {
 
   const handleUploadCertificate = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       quality: 0.8,
     });
@@ -75,7 +75,7 @@ export default function ReligiousCertification() {
 
   const handleUploadLetter = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       quality: 0.8,
     });
@@ -329,7 +329,7 @@ export default function ReligiousCertification() {
       </ScrollView>
       <TouchableOpacity
         style={[styles.helpButton, { backgroundColor: primary }]}
-        onPress={() => {}}
+        onPress={() => { }}
       >
         <Ionicons name="information-circle-outline" size={18} color="white" />
         <View>

@@ -36,9 +36,9 @@ export default function PaymentSetup() {
   const dispatch = useDispatch();
 
   // Get saved payment data from Redux
-  const savedPayment = useSelector(
-    (state: RootState) => ((state as any).onboarding?.payment || {}) as any,
-  );
+  const savedPayment = (useSelector(
+    (state: RootState) => (state as any).onboarding?.payment,
+  ) as any) || {};
 
   // Initialize state with saved data if available
   const [accountHolder, setAccountHolder] = useState(
@@ -364,7 +364,7 @@ export default function PaymentSetup() {
       </View>
       <TouchableOpacity
         style={[styles.helpButton, { backgroundColor: primary }]}
-        onPress={() => {}}
+        onPress={() => { }}
       >
         <Ionicons name="information-circle-outline" size={18} color="white" />
         <View>
