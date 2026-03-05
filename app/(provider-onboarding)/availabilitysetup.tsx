@@ -1086,20 +1086,42 @@ const TimePickerModal = ({
   );
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{title}</Text>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={styles.modalClose}>✕</Text>
-            </TouchableOpacity>
-          </View>
+    <>
+      <Modal
+        visible={visible}
+        transparent
+        animationType="slide"
+        onRequestClose={onClose}
+      >
+        <View style={{ flex: 1 }}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{title}</Text>
+                <TouchableOpacity onPress={onClose}>
+                  <Text style={styles.modalClose}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.pickerContainer}>
+                {/* Hours */}
+                <View style={styles.pickerColumn}>
+                  <Text style={styles.pickerLabel}>Hour</Text>
+                  <FlatList
+                    data={HOURS}
+                    keyExtractor={(item) => item}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.pickerList}
+                    renderItem={({ item }) =>
+                      renderPickerItem(
+                        item,
+                        "hour",
+                        selectedHour,
+                        setSelectedHour,
+                      )
+                    }
+                  />
+                </View>
 
           <View style={styles.pickerContainer}>
             {/* Hours */}
@@ -1164,6 +1186,9 @@ const TimePickerModal = ({
         </View>
       </View>
     </Modal>
+        </View>
+      </Modal>
+    </>
   );
 };
 

@@ -669,7 +669,7 @@ export default function ReligiousAffiliation() {
           <View style={styles.headerCenter}>
             <View style={styles.iconCircle}>
               <MaterialCommunityIcons
-                name={RELIGION_HEADER_ICON[religion] || "mosque"}
+                name={(RELIGION_HEADER_ICON[religion] as any) || "mosque"}
                 size={35}
                 color={primary}
               />
@@ -756,11 +756,7 @@ export default function ReligiousAffiliation() {
                     { backgroundColor: `${primary}15` },
                   ]}
                 >
-                  <MaterialCommunityIcons
-                    name={iconName}
-                    size={22}
-                    color={primary}
-                  />
+                  <MaterialCommunityIcons name={iconName as any} size={22} color={primary} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text

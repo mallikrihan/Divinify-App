@@ -1,0 +1,51 @@
+﻿{
+  "id": "720089bc-bf9a-40c0-b1d0-3d8fd7c65155",
+  "status": "ERRORED",
+  "platform": "ANDROID",
+  "error": {
+    "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+    "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+  },
+  "artifacts": {},
+  "fingerprint": {
+    "id": "019cbd46-e78e-7819-b5a7-9b1de6f8596e",
+    "hash": "52f599ffd0cf2fd48b11d80234f671bafeb64944"
+  },
+  "initiatingActor": {
+    "id": "65706cbc-a058-464e-aec4-5187baadfed5",
+    "displayName": "simrankhan"
+  },
+  "logFiles": [
+    "https://job-logs.eascdn.net/production/720089bc-bf9a-40c0-b1d0-3d8fd7c65155/1772702066874-e440f5e7-8159-42bc-9651-1f47a634eff1.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T091903Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=5279046208039fdda504e1eabd80a03a8da91be67e2fd25b43a82d149c7c1f7a8019aa73ca9d53a4d77afa9edd8b74147b03c36eb14a690a3d2432f4c927e97bbd88f0142fa0e385fa4519d99ea813eb0eaba3ce0be471b9c6055adccabbef6d976faaf5b1535fd56fe3a80e02d0dec58f7b3941f7a6d137cbee0c4bf0eeda5d2c1612bfdf58a9a6918b5f5976d5aefaaac60b947847427d8644a8bfc9f40b65377e068411e04b852c53e88506a86587f5aeb9deb147b2ce3b277d1a0d152f00cb2bf3224eff91e665a510f352537f3746623877f051ee635c9ac73e285093601665afad99e50ed7784f72dec2435b3148beca0e365d7b67aec632956a4d94e5",
+    "https://job-logs.eascdn.net/production/720089bc-bf9a-40c0-b1d0-3d8fd7c65155/1772702072544-46759e91-a456-4794-8f33-9a1be238d00b.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T091903Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=53fa86d008b7ab5427ca032929214fc77570a1fcfc13a17253c7fea848a4de1fd1a62f504c3db2da471641faa1345aeb2d672ad6f316c8e3524314ba660f514ed876c2fffafca2c5be7431e860e27bd040c91b1cc8fc008c7b66252a4b7457d768f839701257e2f0921258accc00169b424b7ba11a19e24cd8429a8e6b94f2f4ef86317d9228dfc273cdadcb1fad85fd873c66489c5ac26f645f1634fe0018840dffb3d1587b0984b06b3f313f001b34081d0d221dba2439bb24b444a9466394e4c999aad8985eaad5b8a4f7eeccbc38872a11ea7e94429d2b66577963d58efb3c40f87595bb9697a28132aacd186f666fa573e6c35358330edde9f09b514922",
+    "https://job-logs.eascdn.net/production/720089bc-bf9a-40c0-b1d0-3d8fd7c65155/1772702072808-8d4b6aca-3133-45a8-be66-478d3cdea3a8.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T091903Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=1fec9be8e96fd3bc0e9222e217c1c3bc8b7b15c09797cdbc7b454c54e3b9d2a3ddf791e64e2f61e14570596bfe356ca6772b68824f002c6356690594bef007af75564e9307022849226208c74d6952fd276ab37a01142911820a425e782ac41a8051f03cfe2b28adc9f06da08ab217ad4f93fe2ed9c63d8709376349d2c9b66d3c7093f193f3a3c0fe8734a70901c6063bb8ffd3d56deaee0ae13b59cff23d56a403114ccecd58d18125741dd0851c5b6602fbda577e8cba25a47e521c2568e63f0477c9f9a80206bfa8ec29e964038c9554585b06b359833320c4c19d6a78e01fb7962a5c2fe71db828805cac680818669b5a66be6bd5c2022e4e1ff1d2e0ad",
+    "https://job-logs.eascdn.net/production/720089bc-bf9a-40c0-b1d0-3d8fd7c65155/1772702072988-f23a334c-481b-4957-b80b-645e92f60645.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260305%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260305T091903Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=7d4e19b05c1b20d67277b40cb27271f3286586263824acef5fe421144c7fdc5a8ec62fa2c6240e1ecc5f7cde8176f9db2512b390adec3e46f00bc2771075d1101da4478b173cab9eb851d0c1932118ba24272f37ca22cf12b058cb0c0b905c5f377be00b2d37ab0c867d22536d68a0750e687c0b5675ba4572aa687aa726a8152d33902a58d1aefbb97261e4fe6d681fea4e2b91bd329c6de7f239407a89fb0f955f08eb15318aacdd691eaa26a43bbf8e79c4e6dced33eccd9bd68ec0f68e4d93f64efadf3ec3affbfd1230339508a9634ad2cdc371c8ca8fc01b3dcc6da0557e4d47d749595de27e1272f1386dc259a34dd480bd672c8fe54658554df1ea4f"
+  ],
+  "project": {
+    "id": "1998090e-e133-4eeb-a130-4dfed4f2a2ca",
+    "name": "Divinify",
+    "slug": "Divinify",
+    "ownerAccount": {
+      "id": "5d9e00ad-ab72-43b7-b560-155c5bd3d28b",
+      "name": "simrankhan"
+    }
+  },
+  "distribution": "INTERNAL",
+  "buildProfile": "preview",
+  "sdkVersion": "54.0.0",
+  "appVersion": "1.0.0",
+  "appBuildVersion": "18",
+  "gitCommitHash": "8bcaae0e72501d47f9e834a08db8ab0232d11b7a",
+  "gitCommitMessage": "Init",
+  "priority": "NORMAL",
+  "createdAt": "2026-03-05T09:14:26.509Z",
+  "updatedAt": "2026-03-05T09:20:50.880Z",
+  "completedAt": "2026-03-05T09:20:43.680Z",
+  "expirationDate": "2026-03-19T09:14:26.565Z",
+  "isForIosSimulator": false,
+  "metrics": {
+    "buildWaitTime": 167,
+    "buildQueueTime": 47315,
+    "buildDuration": 329208
+  }
+}

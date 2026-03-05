@@ -53,8 +53,7 @@
 
 //   const handlePickDocument = async () => {
 //     try {
-//       const result = await ImagePicker.launchImageLibraryAsync({
-//         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+//         mediaTypes: ['images'],
 //         allowsEditing: true,
 //         aspect: [4, 3],
 //         quality: 0.8,
@@ -532,10 +531,10 @@ export default function IdentityVerification() {
   const dispatch = useDispatch();
 
   const savedVerification = useSelector(
-    (state: RootState) => state.onboarding.verification,
+    (state: RootState) => (state as any).onboarding.verification,
   );
 
-  const [idType, setIdType] = useState<string | null>(
+  const [idType, setIdType] = useState<"passport" | "nationalId" | "drivingLicense" | null>(
     savedVerification?.idType || null,
   );
   const [idNumber, setIdNumber] = useState(savedVerification?.idNumber || "");
@@ -547,9 +546,9 @@ export default function IdentityVerification() {
   );
 
   const idOptions = [
-    { label: "Passport", sub: "International ID document", icon: "🛂" },
-    { label: "National ID Card", sub: "Government issued ID", icon: "🆔" },
-    { label: "Driving License", sub: "Valid driver's license", icon: "🚗" },
+    { label: "Passport", value: "passport" as const, sub: "International ID document", icon: "🛂" },
+    { label: "National ID Card", value: "nationalId" as const, sub: "Government issued ID", icon: "🆔" },
+    { label: "Driving License", value: "drivingLicense" as const, sub: "Valid driver's license", icon: "🚗" },
   ];
 
   const { returnTo, fromReview } = useLocalSearchParams<{
@@ -561,7 +560,7 @@ export default function IdentityVerification() {
   const handlePickDocument = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
@@ -611,7 +610,7 @@ export default function IdentityVerification() {
       idNumber: idNumber.trim().toUpperCase(),
       documentImage,
       selfieImage: selfieImage || null,
-      verificationStatus: selfieImage ? "pending" : "document_uploaded",
+      verificationStatus: "pending" as "pending" | "verified" | "rejected",
       submittedAt: new Date().toISOString(),
     };
 
@@ -702,11 +701,11 @@ export default function IdentityVerification() {
             {idOptions.map((option) => (
               <TouchableOpacity
                 key={option.label}
-                onPress={() => setIdType(option.label)}
+                onPress={() => setIdType(option.value)}
                 style={[
                   styles.optionCard,
-                  idType === option.label && styles.optionCardSelected,
-                  idType === option.label && { borderColor: primary },
+                  idType === option.value && styles.optionCardSelected,
+                  idType === option.value && { borderColor: primary },
                 ]}
               >
                 <View style={styles.optionIconContainer}>
@@ -719,10 +718,10 @@ export default function IdentityVerification() {
                 <View
                   style={[
                     styles.radioOuter,
-                    idType === option.label && { borderColor: primary },
+                    idType === option.value && { borderColor: primary },
                   ]}
                 >
-                  {idType === option.label && (
+                  {idType === option.value && (
                     <View
                       style={[styles.radioInner, { backgroundColor: primary }]}
                     />
@@ -815,9 +814,7 @@ export default function IdentityVerification() {
                     <Text style={styles.uploadIcon}>📸</Text>
                   </View>
                   <Text style={styles.uploadTitle}>Tap to take selfie</Text>
-                  <Text style={styles.uploadHint}>
-                    Clear face photo required
-                  </Text>
+                  <Text style={styles.uploadHint}>Clear face photo required</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -831,15 +828,15 @@ export default function IdentityVerification() {
             <View style={styles.securityContent}>
               <Text style={styles.securityTitle}>Data Security</Text>
               <Text style={styles.securityText}>
-                Your documents are encrypted and stored securely. We only use
-                them for verification purposes and never share with third
-                parties.
+                Your documents are encrypted and stored securely. We only use them
+                for verification purposes and never share with third parties.
               </Text>
             </View>
           </View>
 
           {/* Action Buttons */}
           <View style={styles.actionContainer}>
+
             <TouchableOpacity
               onPress={handleContinue}
               style={[
