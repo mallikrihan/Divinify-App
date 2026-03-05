@@ -76,7 +76,7 @@ export default function ReviewSubmit() {
 
   const theme = getTheme();
 
-  const handleEdit = (path: string) => {
+  const handleEdit = (path: any) => {
     router.push({
       pathname: path,
       params: { fromReview: "true", returnTo: "review" },
@@ -173,8 +173,8 @@ export default function ReviewSubmit() {
             isMultiline
           />
           <DetailRow
-            label="Community"
-            value={formData.religiousDetails?.community || "Sunni"}
+            label="Specialization"
+            value={formData.religiousDetails?.specialization}
           />
         </Section>
 
@@ -201,40 +201,82 @@ export default function ReviewSubmit() {
         </Section>
 
         {/* Services */}
+        {/* <Section
+          title="Services Offered"
+          icon="apps-outline"
+          theme={theme}
+          onEdit={() => handleEdit("/(provider-onboarding)/serviceoffer")}
+        >
+          {formData.services &&
+          Array.isArray(formData.services) &&
+          formData.services.length > 0 ? (
+            formData.services.map((service, index) => (
+              <View key={index}>
+                <View style={styles.serviceHeader}>
+                  <Text style={[styles.serviceName, { color: theme.primary }]}>
+                    {service.name}
+                  </Text>
+                </View>
+                <View style={styles.serviceDetailsGrid}>
+                  <View style={styles.serviceDetail}>
+                    <Text style={styles.detailLabel}>Duration</Text>
+                    <Text style={styles.detailValue}>{service.duration}</Text>
+                  </View>
+                  <View style={styles.serviceDetail}>
+                    <Text style={styles.detailLabel}>Price</Text>
+                    <Text style={styles.detailValue}>₹{service.price}</Text>
+                  </View>
+                </View>
+                {index < (formData.services as any[]).length - 1 && (
+                  <View style={styles.serviceDivider} />
+                )}
+              </View>
+            ))
+          ) : (
+            <View>
+              <Text style={styles.noDataText}>No services selected</Text>
+            </View>
+          )}
+        </Section> */}
+        {/* Services */}
         <Section
           title="Services Offered"
           icon="apps-outline"
           theme={theme}
           onEdit={() => handleEdit("/(provider-onboarding)/serviceoffer")}
         >
-          {formData.services?.services?.map((service, index) => (
-            <View key={index}>
-              <View style={styles.serviceHeader}>
-                <Text style={[styles.serviceName, { color: theme.primary }]}>
-                  {service.name}
-                </Text>
-              </View>
-              <View style={styles.serviceDetailsGrid}>
-                <View style={styles.serviceDetail}>
-                  <Text style={styles.detailLabel}>Duration</Text>
-                  <Text style={styles.detailValue}>{service.duration}</Text>
+          {/* CHANGE: Check formData.services.services instead of just formData.services */}
+          {formData.services?.services &&
+          Array.isArray(formData.services.services) &&
+          formData.services.services.length > 0 ? (
+            formData.services.services.map((service: any, index: number) => (
+              <View key={index}>
+                <View style={styles.serviceHeader}>
+                  <Text style={[styles.serviceName, { color: theme.primary }]}>
+                    {service.name}
+                  </Text>
                 </View>
-                <View style={styles.serviceDetail}>
-                  <Text style={styles.detailLabel}>Price</Text>
-                  <Text style={styles.detailValue}>₹{service.price}</Text>
+                <View style={styles.serviceDetailsGrid}>
+                  <View style={styles.serviceDetail}>
+                    <Text style={styles.detailLabel}>Duration</Text>
+                    <Text style={styles.detailValue}>{service.duration}</Text>
+                  </View>
+                  <View style={styles.serviceDetail}>
+                    <Text style={styles.detailLabel}>Price</Text>
+                    <Text style={styles.detailValue}>₹{service.price}</Text>
+                  </View>
                 </View>
+                {index < (formData.services.services as any[]).length - 1 && (
+                  <View style={styles.serviceDivider} />
+                )}
               </View>
-              {index < formData.services.services.length - 1 && (
-                <View style={styles.serviceDivider} />
-              )}
-            </View>
-          )) || (
+            ))
+          ) : (
             <View>
               <Text style={styles.noDataText}>No services selected</Text>
             </View>
           )}
         </Section>
-
         {/* Availability */}
         <Section
           title="Availability"

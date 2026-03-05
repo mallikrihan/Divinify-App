@@ -67,11 +67,11 @@ export default function Profile() {
   const { religion } = useReligion();
 
   const personalDetails = useSelector(
-    (state: RootState) => state.onboarding?.personalDetails,
+    (state: RootState) => (state.onboarding as any)?.personalDetails,
   );
 
   const displayName =
-    user?.name || user?.fullName || personalDetails?.name || "Ahmed Hassan";
+    user?.name || personalDetails?.name || "Ahmed Hassan";
   const displayReligion = religion || user?.religion || "Islam";
 
   const themeColor =

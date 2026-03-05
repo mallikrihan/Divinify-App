@@ -37,7 +37,7 @@ export default function PaymentSetup() {
 
   // Get saved payment data from Redux
   const savedPayment = useSelector(
-    (state: RootState) => state.onboarding.payment,
+    (state: RootState) => ((state as any).onboarding?.payment || {}) as any,
   );
 
   // Initialize state with saved data if available

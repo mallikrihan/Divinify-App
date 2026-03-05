@@ -29,13 +29,9 @@ export default function PersonalDetails() {
   const { returnTo } = useLocalSearchParams<{ returnTo: string }>();
   const isEditing = returnTo === "review";
 
-  if (!religion) {
-    router.replace("/(auth)/religionselect");
-    return null;
-  }
-
   const savedData = useSelector(
-    (state: RootState) => state.onboarding.personalDetails,
+    (state: RootState) =>
+      state.onboarding?.personalDetails || ({} as Record<string, any>),
   );
 
   const [formData, setFormData] = useState({
@@ -47,6 +43,11 @@ export default function PersonalDetails() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  if (!religion) {
+    router.replace("/(auth)/religionselect");
+    return null;
+  }
   const phoneNumber = user?.phone || "+91 ";
   const email = user?.email || "your.email@example.com";
 

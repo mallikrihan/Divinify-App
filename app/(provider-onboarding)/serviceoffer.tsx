@@ -25,15 +25,15 @@ export default function ServiceOffer() {
   const dispatch = useDispatch();
 
   const savedServices = useSelector(
-    (state: RootState) => state.onboarding.services,
+    (state: RootState) => (state as any).onboarding.services,
   );
 
   const [selectedServices, setSelectedServices] = useState<string[]>(
-    savedServices?.services?.map((s) => s.name) || [],
+    savedServices?.services?.map((s: any) => s.name) || [],
   );
 
   const [services, setServices] = useState(
-    getServicesByReligion(religion, savedServices?.services),
+    getServicesByReligion(religion || "islam", savedServices?.services),
   );
 
   const [isModalVisible, setModalVisible] = useState(false);
@@ -98,7 +98,7 @@ export default function ServiceOffer() {
     );
     dispatch(
       updateServices({
-        services: selectedServicesData,
+        services: selectedServicesData, // This wraps the array in an object
         updatedAt: new Date().toISOString(),
       }),
     );

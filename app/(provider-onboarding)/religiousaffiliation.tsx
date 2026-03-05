@@ -34,14 +34,9 @@ export default function ReligiousAffiliation() {
   const { returnTo } = useLocalSearchParams<{ returnTo: string }>();
   const isEditing = returnTo === "review";
 
-  const savedData = useSelector(
-    (state: RootState) => state.onboarding.religiousDetails,
-  );
-
-  if (!religion) {
-    router.replace("/(auth)/religionselect");
-    return null;
-  }
+  const savedData = useSelector((state: RootState) => {
+    return state.onboarding.religiousDetails;
+  });
 
   const [scholarType, setScholarType] = useState<string | null>(
     savedData?.scholarType || null,
@@ -53,6 +48,11 @@ export default function ReligiousAffiliation() {
     savedData?.languages || [],
   );
   const [isListening, setIsListening] = useState(false);
+
+  if (!religion) {
+    router.replace("/(auth)/religionselect");
+    return null;
+  }
 
   const languages = [
     "Arabic",
@@ -131,7 +131,7 @@ export default function ReligiousAffiliation() {
 
           <View style={styles.headerCenter}>
             <View style={styles.iconCircle}>
-              <MaterialCommunityIcons
+              <Ionicons
                 name={RELIGION_HEADER_ICON[religion] || "mosque"}
                 size={35}
                 color={primary}
@@ -219,11 +219,7 @@ export default function ReligiousAffiliation() {
                     { backgroundColor: `${primary}15` },
                   ]}
                 >
-                  <MaterialCommunityIcons
-                    name={iconName}
-                    size={22}
-                    color={primary}
-                  />
+                  <Ionicons name={iconName} size={22} color={primary} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text

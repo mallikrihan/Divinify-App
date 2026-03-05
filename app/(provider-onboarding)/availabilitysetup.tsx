@@ -111,84 +111,93 @@ const TimePickerModal = ({
   );
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{title}</Text>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={styles.modalClose}>✕</Text>
-            </TouchableOpacity>
+    <ScrollView>
+      <Modal
+        visible={visible}
+        transparent
+        animationType="slide"
+        onRequestClose={onClose}
+      >
+        <ScrollView>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{title}</Text>
+                <TouchableOpacity onPress={onClose}>
+                  <Text style={styles.modalClose}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.pickerContainer}>
+                {/* Hours */}
+                <View style={styles.pickerColumn}>
+                  <Text style={styles.pickerLabel}>Hour</Text>
+                  <FlatList
+                    data={HOURS}
+                    keyExtractor={(item) => item}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.pickerList}
+                    renderItem={({ item }) =>
+                      renderPickerItem(
+                        item,
+                        "hour",
+                        selectedHour,
+                        setSelectedHour,
+                      )
+                    }
+                  />
+                </View>
+
+                {/* Minutes */}
+                <View style={styles.pickerColumn}>
+                  <Text style={styles.pickerLabel}>Min</Text>
+                  <FlatList
+                    data={MINUTES}
+                    keyExtractor={(item) => item}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.pickerList}
+                    renderItem={({ item }) =>
+                      renderPickerItem(
+                        item,
+                        "minute",
+                        selectedMinute,
+                        setSelectedMinute,
+                      )
+                    }
+                  />
+                </View>
+
+                {/* AM/PM */}
+                <View style={styles.pickerColumn}>
+                  <Text style={styles.pickerLabel}>Period</Text>
+                  <FlatList
+                    data={PERIODS}
+                    keyExtractor={(item) => item}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.pickerList}
+                    renderItem={({ item }) =>
+                      renderPickerItem(
+                        item,
+                        "period",
+                        selectedPeriod,
+                        setSelectedPeriod,
+                      )
+                    }
+                  />
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.confirmButton}
+                onPress={handleConfirm}
+              >
+                <Text style={styles.confirmButtonText}>Confirm Time</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-
-          <View style={styles.pickerContainer}>
-            {/* Hours */}
-            <View style={styles.pickerColumn}>
-              <Text style={styles.pickerLabel}>Hour</Text>
-              <FlatList
-                data={HOURS}
-                keyExtractor={(item) => item}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.pickerList}
-                renderItem={({ item }) =>
-                  renderPickerItem(item, "hour", selectedHour, setSelectedHour)
-                }
-              />
-            </View>
-
-            {/* Minutes */}
-            <View style={styles.pickerColumn}>
-              <Text style={styles.pickerLabel}>Min</Text>
-              <FlatList
-                data={MINUTES}
-                keyExtractor={(item) => item}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.pickerList}
-                renderItem={({ item }) =>
-                  renderPickerItem(
-                    item,
-                    "minute",
-                    selectedMinute,
-                    setSelectedMinute,
-                  )
-                }
-              />
-            </View>
-
-            {/* AM/PM */}
-            <View style={styles.pickerColumn}>
-              <Text style={styles.pickerLabel}>Period</Text>
-              <FlatList
-                data={PERIODS}
-                keyExtractor={(item) => item}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.pickerList}
-                renderItem={({ item }) =>
-                  renderPickerItem(
-                    item,
-                    "period",
-                    selectedPeriod,
-                    setSelectedPeriod,
-                  )
-                }
-              />
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.confirmButton}
-            onPress={handleConfirm}
-          >
-            <Text style={styles.confirmButtonText}>Confirm Time</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
+        </ScrollView>
+      </Modal>
+    </ScrollView>
   );
 };
 
@@ -221,8 +230,8 @@ export default function AvailabilitySetup() {
 
   // Get saved availability from Redux
   const savedAvailability = useSelector(
-    (state: RootState) => state.onboarding.availability,
-  );
+    (state: RootState) => (state as any).onboarding?.availability || undefined,
+  ) as { days?: AvailabilityState; serviceRadius?: number } | undefined;
 
   const daysList = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -237,7 +246,10 @@ export default function AvailabilitySetup() {
   } | null>(null);
 
   // Initialize state with saved data or defaults
-  const [availability, setAvailability] = useState(() => {
+  type TimeSlot = { active: boolean; from: string; to: string };
+  type AvailabilityState = Record<string, Record<string, TimeSlot>>;
+
+  const [availability, setAvailability] = useState<AvailabilityState>(() => {
     // If we have saved data, use it
     if (savedAvailability?.days) {
       return savedAvailability.days;
@@ -253,7 +265,7 @@ export default function AvailabilitySetup() {
           evening: { active: false, from: "05:00 PM", to: "09:00 PM" },
         },
       }),
-      {},
+      {} as AvailabilityState,
     );
   });
 
@@ -367,9 +379,23 @@ export default function AvailabilitySetup() {
       return;
     }
 
+    // Transform availability data to match Redux schema
+    const transformedDays: Record<
+      string,
+      { morning: boolean; afternoon: boolean; evening: boolean }
+    > = {};
+
+    Object.entries(availability).forEach(([day, slots]) => {
+      transformedDays[day] = {
+        morning: slots.morning.active,
+        afternoon: slots.afternoon.active,
+        evening: slots.evening.active,
+      };
+    });
+
     // Prepare availability data for Redux
     const availabilityData = {
-      days: availability,
+      days: transformedDays,
       serviceRadius: serviceRadius,
       updatedAt: new Date().toISOString(),
     };

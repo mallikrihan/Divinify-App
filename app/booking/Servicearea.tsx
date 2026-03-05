@@ -39,7 +39,7 @@ export default function ServiceAreas() {
     { id: "2", name: "Brooklyn, NY", active: true },
   ]);
 
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useState<Record<string, boolean>>({
     homeVisits: true,
     mosqueServices: true,
     communityCenters: true,

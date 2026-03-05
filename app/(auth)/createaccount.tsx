@@ -1,5 +1,7 @@
 import { RELIGIONS } from "@/constants/religions";
 import { useReligion } from "@/contexts/ReligionContext";
+import { useUser } from "@/contexts/Usercontext";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -12,8 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
-import { useUser } from "../../contexts/Usercontext";
 
 export default function CreateAccountScreen() {
   const { religion } = useReligion();
@@ -33,7 +33,6 @@ export default function CreateAccountScreen() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isQualified, setIsQualified] = useState(false);
 
-  // Community states
   const [community, setCommunity] = useState("");
   const [showCommunityDropdown, setShowCommunityDropdown] = useState(false);
 
@@ -56,19 +55,26 @@ export default function CreateAccountScreen() {
       alert("Please fill in the required fields");
       return;
     }
+
     if (password !== confirmPassword) {
       alert("Passwords do not match");
       return;
     }
+
     if (!agreeTerms || !isQualified) {
       alert("Please agree to the terms and certify your status");
       return;
     }
 
+    // ✅ FIXED — full User object matching your User interface
     setUser({
+      id: Date.now().toString(),
       name: fullName,
-      phone,
       email,
+      phone,
+      address: "",
+      religion: religion || "",
+      profileComplete: false,
     });
 
     router.push("/(auth)/otp");
@@ -83,10 +89,10 @@ export default function CreateAccountScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Icon name="arrow-back" size={24} color="#fff" />
+            <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <View style={styles.headerIconCircle}>
-            <Icon name="person-add" size={30} color={themeColor} />
+            <Ionicons name="person-add" size={30} color={themeColor} />
           </View>
           <Text style={styles.headerTitle}>Join as Scholar</Text>
           <Text style={styles.headerSub}>
@@ -103,12 +109,7 @@ export default function CreateAccountScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.labelText}>Full Name</Text>
             <View style={styles.inputContainer}>
-              <Icon
-                name="person-outline"
-                size={20}
-                color="#999"
-                style={styles.inputIcon}
-              />
+              <Ionicons name="person-outline" size={20} color="black" />
               <TextInput
                 placeholder="Enter your full name"
                 value={fullName}
@@ -122,7 +123,7 @@ export default function CreateAccountScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.labelText}>Email Address</Text>
             <View style={styles.inputContainer}>
-              <Icon
+              <Ionicons
                 name="mail-outline"
                 size={20}
                 color="#999"
@@ -142,7 +143,7 @@ export default function CreateAccountScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.labelText}>Phone Number</Text>
             <View style={styles.inputContainer}>
-              <Icon
+              <Ionicons
                 name="call-outline"
                 size={20}
                 color="#999"
@@ -166,7 +167,7 @@ export default function CreateAccountScreen() {
               style={styles.inputContainer}
               onPress={() => setShowCommunityDropdown(true)}
             >
-              <Icon
+              <Ionicons
                 name="people-outline"
                 size={20}
                 color="#999"
@@ -180,7 +181,7 @@ export default function CreateAccountScreen() {
               >
                 {community || "Select your community"}
               </Text>
-              <Icon name="chevron-down-outline" size={20} color="#999" />
+              <Ionicons name="chevron-down-outline" size={20} color="#999" />
             </TouchableOpacity>
           </View>
 
@@ -193,7 +194,7 @@ export default function CreateAccountScreen() {
                   <TouchableOpacity
                     onPress={() => setShowCommunityDropdown(false)}
                   >
-                    <Icon name="close" size={24} color="#999" />
+                    <Ionicons name="close" size={24} color="#999" />
                   </TouchableOpacity>
                 </View>
                 <ScrollView style={styles.dropdownList}>
@@ -223,7 +224,7 @@ export default function CreateAccountScreen() {
                         {item}
                       </Text>
                       {community === item && (
-                        <Icon name="checkmark" size={20} color={primary} />
+                        <Ionicons name="checkmark" size={20} color={primary} />
                       )}
                     </TouchableOpacity>
                   ))}
@@ -236,7 +237,7 @@ export default function CreateAccountScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.labelText}>Password</Text>
             <View style={styles.inputContainer}>
-              <Icon
+              <Ionicons
                 name="lock-closed-outline"
                 size={20}
                 color="#999"
@@ -251,7 +252,7 @@ export default function CreateAccountScreen() {
                 placeholderTextColor="#999"
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Icon
+                <Ionicons
                   name={showPassword ? "eye-off-outline" : "eye-outline"}
                   size={20}
                   color="#999"
@@ -263,7 +264,7 @@ export default function CreateAccountScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.labelText}>Confirm Password</Text>
             <View style={styles.inputContainer}>
-              <Icon
+              <Ionicons
                 name="lock-closed-outline"
                 size={20}
                 color="#999"
@@ -280,7 +281,7 @@ export default function CreateAccountScreen() {
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               >
-                <Icon
+                <Ionicons
                   name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
                   size={20}
                   color="#999"
@@ -302,7 +303,9 @@ export default function CreateAccountScreen() {
                 },
               ]}
             >
-              {agreeTerms && <Icon name="checkmark" size={14} color="#fff" />}
+              {agreeTerms && (
+                <Ionicons name="checkmark" size={14} color="#fff" />
+              )}
             </View>
             <Text style={styles.checkText}>
               I agree to the{" "}
@@ -324,7 +327,9 @@ export default function CreateAccountScreen() {
                 },
               ]}
             >
-              {isQualified && <Icon name="checkmark" size={14} color="#fff" />}
+              {isQualified && (
+                <Ionicons name="checkmark" size={14} color="#fff" />
+              )}
             </View>
             <Text style={styles.checkText}>
               I certify that I am a qualified religious scholar and will provide
@@ -341,7 +346,7 @@ export default function CreateAccountScreen() {
 
           <View style={styles.infoBoxWarn}>
             <View style={styles.infoRow}>
-              <Icon name="time-outline" size={20} color="#B45309" />
+              <Ionicons name="time-outline" size={20} color="#B45309" />
               <Text style={styles.infoTitle}>What Happens Next?</Text>
             </View>
             <Text style={styles.infoText}>
@@ -353,7 +358,11 @@ export default function CreateAccountScreen() {
 
           <View style={styles.infoBoxSafe}>
             <View style={styles.infoRow}>
-              <Icon name="shield-checkmark-outline" size={20} color="#059669" />
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={20}
+                color="#059669"
+              />
               <Text style={styles.infoTitleGreen}>Verification Required</Text>
             </View>
             <Text style={styles.infoTextGreen}>
@@ -377,11 +386,15 @@ export default function CreateAccountScreen() {
             </Text>
             <View style={styles.trustRow}>
               <View style={styles.trustItem}>
-                <Icon name="checkmark-circle" size={14} color={themeColor} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={14}
+                  color={themeColor}
+                />
                 <Text style={styles.trustLabel}>Verified Scholars</Text>
               </View>
               <View style={styles.trustItem}>
-                <Icon name="lock-closed" size={14} color={themeColor} />
+                <Ionicons name="lock-closed" size={14} color={themeColor} />
                 <Text style={styles.trustLabel}>Secure Platform</Text>
               </View>
             </View>

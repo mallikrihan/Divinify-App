@@ -22,7 +22,7 @@ export default function ServiceProgressScreen() {
   const router = useRouter();
   const { religion } = useReligion();
   const params = useLocalSearchParams();
-  const theme = getTheme(religion);
+  const theme = getTheme(religion || undefined);
 
   const [serviceStarted, setServiceStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -37,13 +37,15 @@ export default function ServiceProgressScreen() {
 
   // Timer effect
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval> | undefined;
     if (serviceStarted && !isPaused && isTimerRunning) {
       interval = setInterval(() => {
         setTimerSeconds((prev) => prev + 1);
       }, 1000);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval !== undefined) clearInterval(interval);
+    };
   }, [serviceStarted, isPaused, isTimerRunning]);
 
   const formatTime = (seconds: number) => {
@@ -160,7 +162,8 @@ export default function ServiceProgressScreen() {
   };
 
   const handleGetDirections = () => {
-    const address = params.address || "123 Maple Street, Springfield";
+    const addressParam = params.address;
+    const address = Array.isArray(addressParam) ? addressParam[0] : addressParam || "123 Maple Street, Springfield";
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
     Linking.openURL(url);
   };

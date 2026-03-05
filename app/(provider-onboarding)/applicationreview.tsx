@@ -71,11 +71,7 @@ export default function ApplicationReview() {
               <Ionicons name="time" size={40} color={theme.primary} />
             </View>
             <View style={styles.badgeIcon}>
-              <MaterialCommunityIcons
-                name="hourglass-outline"
-                size={16}
-                color="#dd1111"
-              />
+              <Ionicons name="hourglass-outline" size={16} color="#dd1111" />
             </View>
           </View>
           <Text style={styles.headerTitle}>Application Under Review</Text>

@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+
 export default function LoginScreen() {
   const { religion } = useReligion();
   const themeColor = religion ? RELIGIONS[religion].color : "#0A8F6A";
@@ -107,11 +107,11 @@ export default function LoginScreen() {
 
           <View style={styles.socialRow}>
             <TouchableOpacity style={styles.socialBtn}>
-              <Icon name="logo-google" size={20} color="#DB4437" />
+              <Ionicons name="logo-google" size={20} color="#DB4437" />
               <Text style={styles.socialLink}>Google</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.socialBtn}>
-              <Icon name="logo-apple" size={22} color="#000" />
+              <Ionicons name="logo-apple" size={22} color="#000" />
               <Text style={styles.socialLink}>Apple</Text>
             </TouchableOpacity>
           </View>
@@ -142,11 +142,15 @@ export default function LoginScreen() {
             </Text>
             <View style={styles.trustRow}>
               <View style={styles.trustItem}>
-                <Icon name="checkmark-circle" size={14} color={themeColor} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={14}
+                  color={themeColor}
+                />
                 <Text style={styles.trustLabel}>Verified Scholars</Text>
               </View>
               <View style={styles.trustItem}>
-                <Icon name="lock-closed" size={14} color={themeColor} />
+                <Ionicons name="lock-closed" size={14} color={themeColor} />
                 <Text style={styles.trustLabel}>Secure Platform</Text>
               </View>
             </View>

@@ -205,9 +205,9 @@ const InfoRow = ({
   >
     <View style={styles.infoIconContainer}>
       {type === "ionicon" ? (
-        <Ionicons name={icon} size={22} color="#6B7280" />
+        <Ionicons name={icon as any} size={22} color="#6B7280" />
       ) : (
-        <MaterialCommunityIcons name={icon} size={22} color="#6B7280" />
+        <MaterialCommunityIcons name={icon as any} size={22} color="#6B7280" />
       )}
     </View>
 
@@ -242,7 +242,7 @@ const PreferenceItem = ({
   <View style={styles.preferenceRow}>
     <View style={styles.preferenceLeft}>
       <View style={[styles.infoIconContainer, { marginRight: 12 }]}>
-        <Ionicons name={icon} size={20} color="#6B7280" />
+        <Ionicons name={icon as any} size={20} color="#6B7280" />
       </View>
       <View>
         <Text style={styles.preferenceTitle}>{title}</Text>
@@ -265,13 +265,13 @@ export default function Profile() {
   const { religion } = useReligion();
 
   const personalDetails = useSelector(
-    (state: RootState) => state.onboarding?.personalDetails,
-  );
+    (state: RootState) => (state as any).onboarding?.personalDetails || {},
+  ) as any;
 
   // State for all editable fields - ONLY ONE ADDRESS FIELD
   const [userData, setUserData] = useState({
     fullName:
-      user?.name || user?.fullName || personalDetails?.name || "Ahmed Hassan",
+      user?.name || personalDetails?.name || "Ahmed Hassan",
     email: user?.email || personalDetails?.email || "ahmed.hassan@email.com",
     phone: user?.phone || personalDetails?.phone || "+1 (555) 123-4567",
     dob: personalDetails?.dob || "05/15/1990",
